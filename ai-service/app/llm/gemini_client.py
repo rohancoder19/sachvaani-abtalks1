@@ -3,9 +3,11 @@ import json
 import os
 from typing import Dict, Any, Optional
 
+from app.config.settings import settings
+
 class GeminiLLMClient:
     def __init__(self, api_key: Optional[str] = None):
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
+        self.api_key = api_key or settings.GEMINI_API_KEY or os.getenv("GEMINI_API_KEY", "")
         self.url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={self.api_key}"
 
     def generate_post(self, topic: Dict[str, Any], persona: Dict[str, Any]) -> Dict[str, Any]:
@@ -35,8 +37,8 @@ class GeminiLLMClient:
         }
 
         try:
-            if not self.api_key or "Ab8RN6J" not in self.api_key: # check if key present
-                raise ValueError("No valid API Key")
+            if not self.api_key or len(self.api_key) < 5:
+                raise ValueError("No valid API Key provided")
 
             res = requests.post(self.url, headers=headers, json=payload, timeout=15)
             if res.status_code == 200:
