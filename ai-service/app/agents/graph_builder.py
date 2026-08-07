@@ -17,34 +17,38 @@ class AutonomousAIPipeline:
         evaluated_topics = []
         approved_topics = []
 
+        non_duplicate_approved = []
         for t in raw_topics:
             eval_result = self.editorial_engine.evaluate_topic(t)
             t.update(eval_result)
             evaluated_topics.append(t)
             
-            if eval_result["status"] == "APPROVED":
-                # 2. Check Vector Memory for Semantic Duplicate
-                is_dup = self.memory_manager.is_duplicate(t["title"], past_memories)
-                if not is_dup:
-                    approved_topics.append(t)
-                else:
-                    t["status"] = "REJECTED"
-                    t["rejectionReason"] = "Semantic duplicate found in long-term persona memory (Cosine Similarity > 0.82)"
+            is_dup = self.memory_manager.is_duplicate(t["title"], past_memories)
+            if is_dup:
+                t["status"] = "REJECTED"
+                t["rejectionReason"] = "Semantic duplicate found in long-term vector memory (Cosine Similarity > 0.82)"
+            elif eval_result["status"] == "APPROVED":
+                non_duplicate_approved.append(t)
 
-        # Sort approved topics by overall score descending
-        approved_topics.sort(key=lambda x: x["score"]["overall"], reverse=True)
+        # Sort non-duplicate approved topics by overall score descending
+        non_duplicate_approved.sort(key=lambda x: x["score"]["overall"], reverse=True)
 
-        if not approved_topics:
-            top_topic = evaluated_topics[0] if evaluated_topics else {
-                "title": "Autonomous AI Multi-Agent Architectures",
-                "summary": "Exploring production patterns for self-directing AI creators.",
-                "source": "AI Research Digest",
-                "url": "https://ai-research.org/multi-agent",
-                "urlHash": "default_hash",
-                "score": {"overall": 8.5}
-            }
+        if non_duplicate_approved:
+            top_topic = non_duplicate_approved[0]
         else:
-            top_topic = approved_topics[0]
+            # Fallback to any non-duplicate candidate topic
+            non_duplicate_all = [t for t in evaluated_topics if t.get("rejectionReason") is None or "duplicate" not in t.get("rejectionReason").lower()]
+            if non_duplicate_all:
+                top_topic = non_duplicate_all[0]
+            else:
+                top_topic = evaluated_topics[0] if evaluated_topics else {
+                    "title": "Autonomous AI Multi-Agent Architectures",
+                    "summary": "Exploring production patterns for self-directing AI creators.",
+                    "source": "AI Research Digest",
+                    "url": "https://ai-research.org/multi-agent",
+                    "urlHash": "default_hash",
+                    "score": {"overall": 8.5}
+                }
 
         # 3. Generate Post Content with Google Gemini LLM API
         post_data = gemini_client.generate_post(top_topic, persona_context)

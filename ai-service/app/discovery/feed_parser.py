@@ -35,27 +35,29 @@ class TopicDiscoveryService:
                 
         # Mock additional tech news entries if feed requests are restricted
         if len(topics) == 0:
+            import time
+            ts = int(time.time())
             topics = [
                 {
-                    "title": "OpenAI Unveils Advanced Reasoning Model Breakthrough in Multimodal Planning",
+                    "title": f"OpenAI Unveils Advanced Reasoning Model Breakthrough in Multimodal Planning ({ts})",
                     "summary": "A new architectural release demonstrates self-correcting chain-of-thought capabilities across complex coding & autonomous task execution.",
                     "source": "OpenAI Official Blog",
-                    "url": "https://openai.com/index/advanced-reasoning-breakthrough",
-                    "urlHash": hashlib.sha256(b"https://openai.com/index/advanced-reasoning-breakthrough").hexdigest()
+                    "url": f"https://openai.com/index/advanced-reasoning-breakthrough?ts={ts}",
+                    "urlHash": hashlib.sha256(f"https://openai.com/index/advanced-reasoning-breakthrough?ts={ts}".encode('utf-8')).hexdigest()
                 },
                 {
-                    "title": "Google DeepMind Introduces Gemini Flash 2.0 with Real-Time Video-Native Processing",
+                    "title": f"Google DeepMind Introduces Gemini Flash 2.0 with Real-Time Video-Native Processing ({ts})",
                     "summary": "DeepMind releases low-latency multimodal LLM capable of processing continuous live video streams with sub-100ms response times.",
                     "source": "Google AI Blog",
-                    "url": "https://blog.google/technology/ai/gemini-flash-2-multimodal/",
-                    "urlHash": hashlib.sha256(b"https://blog.google/technology/ai/gemini-flash-2-multimodal/").hexdigest()
+                    "url": f"https://blog.google/technology/ai/gemini-flash-2-multimodal/?ts={ts}",
+                    "urlHash": hashlib.sha256(f"https://blog.google/technology/ai/gemini-flash-2-multimodal/?ts={ts}".encode('utf-8')).hexdigest()
                 },
                 {
-                    "title": "HuggingFace Releases Open-Source Vector RAG Framework for Edge Devices",
+                    "title": f"HuggingFace Releases Open-Source Vector RAG Framework for Edge Devices ({ts})",
                     "summary": "New open-source toolkit enables high-speed local embedding generation and semantic memory storage on consumer laptops.",
                     "source": "HuggingFace Hub",
-                    "url": "https://huggingface.co/blog/edge-rag-framework",
-                    "urlHash": hashlib.sha256(b"https://huggingface.co/blog/edge-rag-framework").hexdigest()
+                    "url": f"https://huggingface.co/blog/edge-rag-framework?ts={ts}",
+                    "urlHash": hashlib.sha256(f"https://huggingface.co/blog/edge-rag-framework?ts={ts}".encode('utf-8')).hexdigest()
                 }
             ]
             

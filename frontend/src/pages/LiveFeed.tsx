@@ -1,15 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { Rss, ExternalLink, Share2, Heart, Sparkles } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Rss, ExternalLink, Share2, Heart, Sparkles, RefreshCw } from 'lucide-react';
 import { agentApi } from '../services/api.client';
+import { useSocket } from '../context/SocketContext';
 
 export const LiveFeed: React.FC = () => {
+  const { lastEvent } = useSocket();
   const [posts, setPosts] = useState<any[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchFeed = useCallback(async () => {
+    try {
+      setIsRefreshing(true);
+      const res = await agentApi.getFeed();
+      if (res.success) setPosts(res.data || []);
+    } catch (err) {
+      console.error('Error fetching live feed:', err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, []);
 
   useEffect(() => {
-    agentApi.getFeed().then((res) => {
-      if (res.success) setPosts(res.data || []);
-    });
-  }, []);
+    fetchFeed();
+  }, [fetchFeed, lastEvent]);
 
   const renderFormattedText = (text: string) => {
     if (!text) return null;
@@ -60,19 +73,30 @@ export const LiveFeed: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center space-x-3">
-        <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
-          <Rss className="w-6 h-6" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="p-2.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+            <Rss className="w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <span>Autonomous Live Post Stream</span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Live AI
+              </span>
+            </h2>
+            <p className="text-xs text-gray-400">Real-time feed of posts published automatically by the AI Persona worker.</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-xl font-bold text-white flex items-center gap-2">
-            <span>Autonomous Live Post Stream</span>
-            <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Live AI
-            </span>
-          </h2>
-          <p className="text-xs text-gray-400">Real-time feed of posts published automatically by the AI Persona worker.</p>
-        </div>
+
+        <button
+          onClick={fetchFeed}
+          disabled={isRefreshing}
+          className="px-3.5 py-2 rounded-xl bg-surface hover:bg-slate-800 border border-border/80 text-xs font-semibold text-gray-300 hover:text-white transition-all flex items-center space-x-2 shrink-0 disabled:opacity-50"
+        >
+          <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isRefreshing ? 'animate-spin' : ''}`} />
+          <span>{isRefreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
+        </button>
       </div>
 
       <div className="space-y-5">

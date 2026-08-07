@@ -13,11 +13,11 @@ export const agentApi = {
     return res.data;
   },
   getFeed: async (page = 1, limit = 10) => {
-    const res = await apiClient.get(`/agent/feed?page=${page}&limit=${limit}`);
+    const res = await apiClient.get(`/agent/feed?page=${page}&limit=${limit}&_t=${Date.now()}`);
     return res.data;
   },
   getPersonas: async () => {
-    const res = await apiClient.get('/persona');
+    const res = await apiClient.get(`/persona?_t=${Date.now()}`);
     return res.data;
   },
   createPersona: async (data: any) => {
@@ -25,11 +25,11 @@ export const agentApi = {
     return res.data;
   },
   getTopics: async (status?: string) => {
-    const res = await apiClient.get(`/topics${status ? `?status=${status}` : ''}`);
+    const res = await apiClient.get(`/topics${status ? `?status=${status}&` : '?'} _t=${Date.now()}`.replace(/\s+/g, ''));
     return res.data;
   },
   getPosts: async () => {
-    const res = await apiClient.get('/posts');
+    const res = await apiClient.get(`/posts?_t=${Date.now()}`);
     return res.data;
   },
   getMemory: async () => {

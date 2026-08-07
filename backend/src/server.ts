@@ -23,6 +23,8 @@ const startServer = async () => {
       }
     });
 
+    app.set('io', io);
+
     io.on('connection', (socket) => {
       logger.info(`🔌 Socket Client Connected: ${socket.id}`);
       socket.on('disconnect', () => {

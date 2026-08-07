@@ -3,6 +3,10 @@ import { PostModel } from '../models/post.model';
 
 export const getPosts = async (req: Request, res: Response): Promise<void> => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const posts = await PostModel.find()
       .populate('personaId', 'name domain')
       .populate('topicId', 'title source url score')

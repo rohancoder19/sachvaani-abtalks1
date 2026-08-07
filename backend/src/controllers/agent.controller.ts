@@ -9,12 +9,14 @@ import { aiClientService } from '../services/aiClient.service';
 import { logger } from '../config/logger';
 
 export const runDirectAutonomousCycle = async (personaId: string) => {
-  // Fetch existing vector memory logs to prevent publishing duplicate topics
-  const existingMemories = await MemoryModel.find({ personaId }).lean();
-  const pastMemories = existingMemories.map((m: any) => ({
-    summary: m.summary,
-    embeddings: m.embeddings
-  }));
+  // Fetch all existing vector memory logs & published posts to prevent duplicate publication platform-wide
+  const existingMemories = await MemoryModel.find().lean();
+  const existingPosts = await PostModel.find().lean();
+
+  const pastMemories = [
+    ...existingMemories.map((m: any) => ({ summary: m.summary, embeddings: m.embeddings })),
+    ...existingPosts.map((p: any) => ({ summary: p.text?.split('\n')[0]?.replace(/[🚀*]/g, '').trim(), embeddings: [] }))
+  ];
 
   const result = await aiClientService.triggerAutonomousCycle(personaId, pastMemories);
   const aiData = result?.data;
@@ -97,6 +99,15 @@ export const initAgentTask = async (req: Request, res: Response): Promise<void> 
     // Trigger direct execution cycle so database and UI views update immediately
     const cycleData = await runDirectAutonomousCycle(persona._id.toString());
 
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('AUTONOMOUS_CYCLE_COMPLETED', {
+        personaId: persona._id,
+        result: cycleData,
+        timestamp: new Date()
+      });
+    }
+
     await SchedulerModel.findOneAndUpdate(
       { personaId: persona._id },
       {
@@ -111,6 +122,10 @@ export const initAgentTask = async (req: Request, res: Response): Promise<void> 
     );
 
     logger.info(`🚀 Autonomous cycle completed successfully for Persona: ${persona.name}`);
+
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
 
     res.status(200).json({
       success: true,
@@ -130,6 +145,10 @@ export const initAgentTask = async (req: Request, res: Response): Promise<void> 
 
 export const getAgentFeed = async (req: Request, res: Response): Promise<void> => {
   try {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+
     const page = Number(req.query.page) || 1;
     const limit = Number(req.query.limit) || 10;
     const skip = (page - 1) * limit;
