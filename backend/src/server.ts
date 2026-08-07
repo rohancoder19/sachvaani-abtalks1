@@ -33,8 +33,21 @@ const startServer = async () => {
     // 4. Initialize BullMQ Queue Worker
     initAgentWorker(io);
 
-    // 5. Start Server Listen
+    // 5. Start Server Listen with EADDRINUSE fallback handling
     const PORT = Number(env.PORT) || 5000;
+    
+    server.on('error', (err: any) => {
+      if (err.code === 'EADDRINUSE') {
+        logger.warn(`⚠️ Port ${PORT} is in use, retrying in 2 seconds...`);
+        setTimeout(() => {
+          server.close();
+          server.listen(PORT);
+        }, 2000);
+      } else {
+        logger.error('❌ Server Listen Error:', err);
+      }
+    });
+
     server.listen(PORT, () => {
       logger.info(`🚀 Backend API Gateway Server running on http://localhost:${PORT}`);
       logger.info(`📡 Real-Time Socket.IO Server active on ws://localhost:${PORT}`);
