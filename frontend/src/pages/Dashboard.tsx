@@ -120,37 +120,72 @@ export const Dashboard: React.FC = () => {
                 </p>
               </div>
             ) : (
-              feed.map((post) => (
-                <div key={post._id} className="p-5 rounded-2xl bg-surface border border-border/80 space-y-3 hover:border-indigo-500/30 transition-all">
-                  <div className="flex items-center justify-between text-xs text-gray-400">
-                    <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-medium">
-                      {post.personaId?.name || 'Autonomous AI'}
-                    </span>
-                    <span>{new Date(post.createdAt).toLocaleTimeString()}</span>
-                  </div>
+              feed.map((post) => {
+                const personaName =
+                  typeof post.personaId === 'object' && post.personaId?.name
+                    ? post.personaId.name
+                    : 'Autonomous AI Creator';
 
-                  <div className="text-sm text-gray-200 whitespace-pre-line leading-relaxed font-sans">
-                    {post.text}
-                  </div>
+                return (
+                  <div key={post._id} className="p-5 rounded-2xl bg-surface border border-border/80 space-y-3 hover:border-indigo-500/30 transition-all">
+                    <div className="flex items-center justify-between text-xs text-gray-400">
+                      <span className="px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-medium flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+                        {personaName}
+                      </span>
+                      <span className="font-mono text-gray-400">{new Date(post.createdAt).toLocaleTimeString()}</span>
+                    </div>
 
-                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-gray-400">
-                    <span className="text-indigo-300 font-mono text-[11px] truncate max-w-md">
-                      Rationale: {post.rationale}
-                    </span>
-                    {post.sources?.[0]?.url && (
-                      <a
-                        href={post.sources[0].url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center space-x-1 text-cyan-400 hover:underline shrink-0"
-                      >
-                        <span>Source</span>
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
+                    <div className="text-sm text-gray-200 leading-relaxed font-sans space-y-1.5">
+                      {post.text?.split('\n').map((line: string, idx: number) => {
+                        if (!line.trim()) return <div key={idx} className="h-1" />;
+                        const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/g);
+                        const isHeader = line.startsWith('🚀') || line.startsWith('💡') || line.startsWith('📌');
+                        const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
+                        return (
+                          <p
+                            key={idx}
+                            className={`${
+                              isHeader
+                                ? 'font-bold text-white mt-1.5'
+                                : isBullet
+                                ? 'pl-3 text-gray-300 text-xs font-medium border-l border-indigo-500/40'
+                                : 'text-xs sm:text-sm text-gray-300'
+                            }`}
+                          >
+                            {parts.map((part: string, pIdx: number) => {
+                              if (part.startsWith('**') && part.endsWith('**')) {
+                                return <strong key={pIdx} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
+                              }
+                              if (part.startsWith('*') && part.endsWith('*')) {
+                                return <em key={pIdx} className="italic text-indigo-300 font-normal text-[11px]">{part.slice(1, -1)}</em>;
+                              }
+                              return part;
+                            })}
+                          </p>
+                        );
+                      })}
+                    </div>
+
+                    <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-gray-400">
+                      <span className="text-indigo-300 font-mono text-[11px] truncate max-w-md">
+                        Rationale: {post.rationale}
+                      </span>
+                      {post.sources?.[0]?.url && (
+                        <a
+                          href={post.sources[0].url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex items-center space-x-1 text-cyan-400 hover:underline shrink-0 font-medium"
+                        >
+                          <span>Source</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))
+                );
+              })
             )}
           </div>
         </div>
