@@ -20,6 +20,10 @@ export const agentApi = {
     const res = await apiClient.get('/persona');
     return res.data;
   },
+  createPersona: async (data: any) => {
+    const res = await apiClient.post('/persona', data);
+    return res.data;
+  },
   getTopics: async (status?: string) => {
     const res = await apiClient.get(`/topics${status ? `?status=${status}` : ''}`);
     return res.data;
