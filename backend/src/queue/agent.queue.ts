@@ -11,10 +11,15 @@ import { MemoryModel } from '../models/memory.model';
 const connection = {
   host: env.REDIS_HOST,
   port: Number(env.REDIS_PORT),
-  password: env.REDIS_PASSWORD || undefined
+  password: env.REDIS_PASSWORD || undefined,
+  maxRetriesPerRequest: null,
+  enableOfflineQueue: false
 };
 
 export const agentQueue = new Queue('autonomous-agent-queue', { connection });
+agentQueue.on('error', (err) => {
+  logger.warn('⚠️ BullMQ Redis Queue Warning (Redis may be offline):', err.message);
+});
 
 export const initAgentWorker = (ioInstance?: any) => {
   const worker = new Worker(
