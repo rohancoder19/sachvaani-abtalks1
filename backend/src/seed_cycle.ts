@@ -27,9 +27,12 @@ async function seedAutonomousCycle() {
       logger.info(`✨ Created default Persona: ${persona.name}`);
     }
 
-    // 2. Execute Python AI Pipeline to fetch live topics & generate post
-    logger.info('🤖 Executing AI Service live topic discovery & scoring cycle...');
-    const aiResult = await aiClientService.triggerAutonomousCycle(persona._id.toString());
+    // 2. Fetch past memories for deduplication & execute Python AI Pipeline
+    const existingMemories = await MemoryModel.find({ personaId: persona._id }).lean();
+    const pastMemories = existingMemories.map((m: any) => ({ summary: m.summary, embeddings: m.embeddings }));
+
+    logger.info(`🤖 Executing AI Service live topic discovery cycle with ${pastMemories.length} vector memory logs...`);
+    const aiResult = await aiClientService.triggerAutonomousCycle(persona._id.toString(), pastMemories);
     const aiData = aiResult?.data;
 
     if (!aiData) {

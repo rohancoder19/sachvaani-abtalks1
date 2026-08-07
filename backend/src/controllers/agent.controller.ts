@@ -9,7 +9,14 @@ import { aiClientService } from '../services/aiClient.service';
 import { logger } from '../config/logger';
 
 export const runDirectAutonomousCycle = async (personaId: string) => {
-  const result = await aiClientService.triggerAutonomousCycle(personaId);
+  // Fetch existing vector memory logs to prevent publishing duplicate topics
+  const existingMemories = await MemoryModel.find({ personaId }).lean();
+  const pastMemories = existingMemories.map((m: any) => ({
+    summary: m.summary,
+    embeddings: m.embeddings
+  }));
+
+  const result = await aiClientService.triggerAutonomousCycle(personaId, pastMemories);
   const aiData = result?.data;
 
   if (aiData) {

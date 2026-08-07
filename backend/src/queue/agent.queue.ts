@@ -39,8 +39,15 @@ export const initAgentWorker = (ioInstance?: any) => {
         details: { jobId: job.id }
       });
 
+      // Fetch existing vector memory logs for deduplication
+      const existingMemories = await MemoryModel.find({ personaId: job.data.personaId }).lean();
+      const pastMemories = existingMemories.map((m: any) => ({
+        summary: m.summary,
+        embeddings: m.embeddings
+      }));
+
       // Call Python FastAPI AI Service
-      const result = await aiClientService.triggerAutonomousCycle(job.data.personaId);
+      const result = await aiClientService.triggerAutonomousCycle(job.data.personaId, pastMemories);
       const aiData = result?.data;
 
       if (aiData) {

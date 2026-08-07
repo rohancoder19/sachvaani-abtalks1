@@ -12,6 +12,7 @@ app = FastAPI(
 
 class ExecuteAgentRequest(BaseModel):
     personaId: str
+    pastMemories: Optional[list] = []
 
 @app.get("/health")
 def health_check():
@@ -27,7 +28,7 @@ def execute_autonomous_agent(request: ExecuteAgentRequest):
         }
         
         # Execute autonomous discovery, evaluation, deduplication, & synthesis pipeline
-        result = pipeline.run_autonomous_cycle(persona_context, [])
+        result = pipeline.run_autonomous_cycle(persona_context, request.pastMemories or [])
         return {"success": True, "data": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

@@ -26,9 +26,15 @@ class PersonaMemoryManager:
         return dot_product / (norm_a * norm_b)
 
     def is_duplicate(self, candidate_text: str, previous_memories: List[Dict[str, Any]], threshold: float = 0.82) -> bool:
-        """Checks if candidate topic embedding is > threshold cosine similarity to past memory entries."""
+        """Checks if candidate topic embedding is > threshold cosine similarity or exact title match to past memory entries."""
+        cand_lower = candidate_text.strip().lower()
         cand_embedding = self.generate_dummy_embedding(candidate_text)
+        
         for mem in previous_memories:
+            summary_lower = mem.get("summary", "").strip().lower()
+            if summary_lower and (cand_lower == summary_lower or cand_lower in summary_lower or summary_lower in cand_lower):
+                return True
+                
             past_vec = mem.get("embeddings", [])
             if past_vec and len(past_vec) == 1536:
                 sim = self.calculate_cosine_similarity(cand_embedding, past_vec)

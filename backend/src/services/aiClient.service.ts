@@ -11,10 +11,10 @@ export class AIClientService {
     }
   });
 
-  async triggerAutonomousCycle(personaId: string): Promise<any> {
+  async triggerAutonomousCycle(personaId: string, pastMemories: any[] = []): Promise<any> {
     try {
-      logger.info(`🤖 Triggering Python AI Service autonomous pipeline for persona: ${personaId}`);
-      const response = await this.client.post('/api/v1/agent/execute', { personaId });
+      logger.info(`🤖 Triggering Python AI Service pipeline for persona: ${personaId} (${pastMemories.length} past memories)`);
+      const response = await this.client.post('/api/v1/agent/execute', { personaId, pastMemories });
       return response.data;
     } catch (error: any) {
       logger.error('❌ Error calling Python AI Service:', error.message || error);
