@@ -1,9 +1,11 @@
 import React from 'react';
-import { Bot, Zap, Bell, Activity } from 'lucide-react';
+import { Bot, Bell, Activity, LogOut, User as UserIcon } from 'lucide-react';
 import { useSocket } from '../../context/SocketContext';
+import { useAuthStore } from '../../store/useAuthStore';
 
 export const Navbar: React.FC = () => {
   const { isConnected } = useSocket();
+  const { user, logout } = useAuthStore();
 
   return (
     <header className="h-16 border-b border-border/60 bg-[#0B1120]/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-40">
@@ -33,10 +35,27 @@ export const Navbar: React.FC = () => {
           </span>
         </div>
 
-        <button className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-surface transition-colors relative">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
-        </button>
+        {user && (
+          <div className="flex items-center space-x-3 pl-3 border-l border-border/60">
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold text-xs">
+                {user.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="text-left hidden sm:block">
+                <div className="text-xs font-bold text-white leading-tight">{user.name}</div>
+                <div className="text-[10px] text-gray-400 font-mono truncate max-w-[120px]">{user.email}</div>
+              </div>
+            </div>
+
+            <button
+              onClick={logout}
+              title="Logout"
+              className="p-2 text-gray-400 hover:text-rose-400 rounded-lg hover:bg-rose-500/10 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
     </header>
   );

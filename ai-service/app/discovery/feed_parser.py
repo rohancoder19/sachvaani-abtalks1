@@ -11,7 +11,7 @@ LIVE_SOURCES = [
 ]
 
 class TopicDiscoveryService:
-    def fetch_live_topics((self) -> List[Dict[str, Any]]:
+    def fetch_live_topics(self) -> List[Dict[str, Any]]:
         topics = []
         for source in LIVE_SOURCES:
             try:
