@@ -11,16 +11,13 @@ export const LiveFeed: React.FC = () => {
   const fetchFeed = useCallback(async (triggerCycle = false) => {
     try {
       setIsRefreshing(true);
+      if (triggerCycle) {
+        await agentApi.initializeAgent().catch(() => {});
+        // Short pause for background cycle completion & DB write
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+      }
       const res = await agentApi.getFeed();
       if (res.success) setPosts(res.data || []);
-
-      if (triggerCycle) {
-        agentApi.initializeAgent().then(() => {
-          agentApi.getFeed().then((updated) => {
-            if (updated.success) setPosts(updated.data || []);
-          });
-        }).catch(err => console.error(err));
-      }
     } catch (err) {
       console.error('Error fetching live feed:', err);
     } finally {

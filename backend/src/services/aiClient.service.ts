@@ -5,7 +5,7 @@ import { logger } from '../config/logger';
 export class AIClientService {
   private client = axios.create({
     baseURL: env.FASTAPI_AI_SERVICE_URL,
-    timeout: 60000, // 60s timeout for LLM generation
+    timeout: 12000, // 12s timeout for fast response on Render serverless
     headers: {
       'Content-Type': 'application/json'
     }

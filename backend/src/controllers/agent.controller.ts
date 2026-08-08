@@ -109,43 +109,47 @@ export const initAgentTask = async (req: Request, res: Response): Promise<void> 
       logger.warn('BullMQ Redis Queue bypass (running direct execution mode):', err.message);
     }
 
-    // Run direct cycle so immediate fresh post is guaranteed
-    const cycleData = await runDirectAutonomousCycle(persona._id.toString());
-    const io = req.app.get('io');
-    if (io) {
-      io.emit('AUTONOMOUS_CYCLE_COMPLETED', {
-        personaId: persona._id,
-        result: cycleData,
-        timestamp: new Date()
-      });
-    }
-
-    await SchedulerModel.findOneAndUpdate(
-      { personaId: persona._id },
-      {
-        personaId: persona._id,
-        cronExpression: '*/30 * * * *',
-        intervalMinutes: 30,
-        status: 'IDLE',
-        nextRunAt: new Date(Date.now() + 30 * 60 * 1000),
-        $inc: { totalRuns: 1, successfulRuns: 1 }
-      },
-      { upsert: true }
-    );
-
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
     res.status(200).json({
       success: true,
-      message: 'Autonomous AI Creator cycle initiated successfully. Discovered fresh topics and updated feed.',
+      message: 'Autonomous AI Creator cycle initiated successfully. Discovered fresh topics and updating feed.',
       persona: {
         id: persona._id,
         name: persona.name,
         domain: persona.domain
-      },
-      cycleResult: cycleData
+      }
+    });
+
+    // Run cycle asynchronously to prevent 30s proxy timeouts on Render
+    runDirectAutonomousCycle(persona._id.toString()).then(async (cycleData) => {
+      const io = req.app.get('io');
+      if (io) {
+        io.emit('AUTONOMOUS_CYCLE_COMPLETED', {
+          personaId: persona?._id,
+          result: cycleData,
+          timestamp: new Date()
+        });
+      }
+
+      await SchedulerModel.findOneAndUpdate(
+        { personaId: persona?._id },
+        {
+          personaId: persona?._id,
+          cronExpression: '*/30 * * * *',
+          intervalMinutes: 30,
+          status: 'IDLE',
+          nextRunAt: new Date(Date.now() + 30 * 60 * 1000),
+          $inc: { totalRuns: 1, successfulRuns: 1 }
+        },
+        { upsert: true }
+      );
+
+      logger.info(`🚀 Autonomous cycle completed asynchronously for Persona: ${persona?.name}`);
+    }).catch(err => {
+      logger.error('Error running asynchronous autonomous cycle:', err);
     });
   } catch (error: any) {
     logger.error('Error initializing agent task:', error);
