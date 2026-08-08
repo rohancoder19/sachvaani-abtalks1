@@ -7,8 +7,7 @@
     "backend"
   ],
   "scripts": {
-    "build": "npm run build --workspace=frontend",
-    "vercel-build": "npm run build --workspace=frontend"
+    "build": "npm run build --workspace=frontend"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",
