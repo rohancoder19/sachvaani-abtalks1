@@ -3,10 +3,12 @@ import { z } from 'zod';
 
 dotenv.config();
 
+const mongoUri = process.env.MONGODB_URI || process.env.MONGODB_UR || 'mongodb://localhost:27017/autonomous-ai-creator';
+
 const envSchema = z.object({
   PORT: z.string().default('5000'),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
-  MONGODB_URI: z.string().default('mongodb://localhost:27017/autonomous-ai-creator'),
+  MONGODB_URI: z.string().default(mongoUri),
   REDIS_HOST: z.string().default('localhost'),
   REDIS_PORT: z.string().default('6379'),
   REDIS_PASSWORD: z.string().optional(),
@@ -16,4 +18,7 @@ const envSchema = z.object({
   CORS_ORIGIN: z.string().default('http://localhost:5173')
 });
 
-export const env = envSchema.parse(process.env);
+export const env = envSchema.parse({
+  ...process.env,
+  MONGODB_URI: mongoUri
+});

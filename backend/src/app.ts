@@ -12,7 +12,7 @@ export const createApp = (): express.Application => {
   app.use(helmet());
   app.use(
     cors({
-      origin: [env.CORS_ORIGIN, 'http://localhost:5173', 'http://127.0.0.1:5173'],
+      origin: true,
       credentials: true
     })
   );
@@ -25,8 +25,9 @@ export const createApp = (): express.Application => {
   app.use(morgan(env.NODE_ENV === 'development' ? 'dev' : 'combined'));
 
   // Root & Health API endpoints
-  app.use('/api', routes);
   app.use('/api/v1', routes);
+  app.use('/api', routes);
+  app.use('/', routes);
   app.get('/health', (req, res) => res.status(200).json({ status: 'ok' }));
 
   return app;

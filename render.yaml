@@ -1,0 +1,45 @@
+services:
+  # 1. Backend Node.js Web Service
+  - type: web
+    name: abtalks-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: FASTAPI_AI_SERVICE_URL
+        value: https://abtalks-ai-service.onrender.com
+      - key: CORS_ORIGIN
+        value: "*"
+
+  # 2. Python FastAPI AI Microservice
+  - type: web
+    name: abtalks-ai-service
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: cd ai-service && pip install -r requirements.txt
+    startCommand: cd ai-service && uvicorn main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+
+  # 3. Frontend React SPA Static Site
+  - type: web
+    name: abtalks-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://abtalks-backend.onrender.com/api/v1
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

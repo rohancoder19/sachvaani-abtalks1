@@ -43,16 +43,16 @@ const startServer = async () => {
         logger.warn(`⚠️ Port ${PORT} is in use, retrying in 2 seconds...`);
         setTimeout(() => {
           server.close();
-          server.listen(PORT);
+          server.listen(PORT, '0.0.0.0');
         }, 2000);
       } else {
         logger.error('❌ Server Listen Error:', err);
       }
     });
 
-    server.listen(PORT, () => {
-      logger.info(`🚀 Backend API Gateway Server running on http://localhost:${PORT}`);
-      logger.info(`📡 Real-Time Socket.IO Server active on ws://localhost:${PORT}`);
+    server.listen(PORT, '0.0.0.0', () => {
+      logger.info(`🚀 Backend API Gateway Server running on http://0.0.0.0:${PORT}`);
+      logger.info(`📡 Real-Time Socket.IO Server active on ws://0.0.0.0:${PORT}`);
     });
   } catch (error) {
     logger.error('❌ Server startup error:', error);
