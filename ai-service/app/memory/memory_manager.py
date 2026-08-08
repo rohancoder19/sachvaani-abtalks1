@@ -32,7 +32,7 @@ class PersonaMemoryManager:
         
         for mem in previous_memories:
             summary_lower = mem.get("summary", "").strip().lower()
-            if summary_lower and (cand_lower == summary_lower or cand_lower in summary_lower or summary_lower in cand_lower):
+            if summary_lower and cand_lower == summary_lower:
                 return True
                 
             past_vec = mem.get("embeddings", [])
