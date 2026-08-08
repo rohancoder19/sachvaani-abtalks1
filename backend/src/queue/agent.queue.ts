@@ -16,8 +16,10 @@ const connection = {
   enableOfflineQueue: false
 };
 
+export const agentQueue = new Queue('autonomous-agent-queue', { connection });
+
 let hasLoggedRedisWarning = false;
-agentQueue.on('error', (err) => {
+agentQueue.on('error', (err: any) => {
   if (!hasLoggedRedisWarning) {
     logger.warn('⚠️ BullMQ Redis Queue Notice: Redis is offline (falling back to direct execution mode)');
     hasLoggedRedisWarning = true;
