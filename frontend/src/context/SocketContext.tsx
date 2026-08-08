@@ -19,7 +19,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [lastEvent, setLastEvent] = useState<any>(null);
 
   useEffect(() => {
-    const socketInstance = io('http://localhost:5000', {
+    const getSocketUrl = () => {
+      if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+        return 'https://abtalks-backend.onrender.com';
+      }
+      return 'http://localhost:5000';
+    };
+
+    const socketInstance = io(getSocketUrl(), {
       transports: ['websocket', 'polling']
     });
 
