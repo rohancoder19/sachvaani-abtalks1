@@ -10,11 +10,16 @@ export const TopicDiscovery: React.FC = () => {
   const fetchTopics = async (triggerCrawl = false) => {
     try {
       setIsLoading(true);
-      if (triggerCrawl) {
-        await agentApi.initializeAgent();
-      }
       const res = await agentApi.getTopics();
       if (res.success) setTopics(res.data || []);
+
+      if (triggerCrawl) {
+        agentApi.initializeAgent().then(() => {
+          agentApi.getTopics().then((updated) => {
+            if (updated.success) setTopics(updated.data || []);
+          });
+        }).catch(err => console.error(err));
+      }
     } catch (err) {
       console.error(err);
     } finally {
