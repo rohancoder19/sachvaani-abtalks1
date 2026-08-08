@@ -4,13 +4,15 @@ import { agentApi } from '../services/api.client';
 
 export const TopicDiscovery: React.FC = () => {
   const [topics, setTopics] = useState<any[]>([]);
-  const [sortBy, setSortBy] = useState<'score' | 'recent'>('score');
-
+  const [sortBy, setSortBy] = useState<'score' | 'recent'>('recent');
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchTopics = async () => {
+  const fetchTopics = async (triggerCrawl = false) => {
     try {
       setIsLoading(true);
+      if (triggerCrawl) {
+        await agentApi.initializeAgent();
+      }
       const res = await agentApi.getTopics();
       if (res.success) setTopics(res.data || []);
     } catch (err) {
@@ -23,6 +25,11 @@ export const TopicDiscovery: React.FC = () => {
   useEffect(() => {
     fetchTopics();
   }, []);
+
+  const cleanSummary = (text?: string) => {
+    if (!text) return '';
+    return text.replace(/<[^>]*>?/gm, '').replace(/&[a-z0-9]+;/gi, ' ').trim();
+  };
 
   const sortedTopics = [...topics].sort((a, b) => {
     if (sortBy === 'recent') {
@@ -51,12 +58,12 @@ export const TopicDiscovery: React.FC = () => {
 
         <div className="flex items-center space-x-3 shrink-0">
           <button
-            onClick={fetchTopics}
+            onClick={() => fetchTopics(true)}
             disabled={isLoading}
             className="px-3 py-1.5 rounded-xl bg-surface border border-border/80 text-xs text-cyan-400 hover:text-cyan-300 font-semibold flex items-center space-x-1.5 transition-all"
           >
             <Compass className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
-            <span>{isLoading ? 'Fetching...' : 'Refresh Feed'}</span>
+            <span>{isLoading ? 'Fetching Live Feeds...' : 'Refresh Feed'}</span>
           </button>
 
           <div className="flex items-center space-x-2">
@@ -66,8 +73,8 @@ export const TopicDiscovery: React.FC = () => {
               onChange={(e) => setSortBy(e.target.value as 'score' | 'recent')}
               className="px-3 py-1.5 rounded-xl bg-surface border border-border/80 text-xs text-white focus:outline-none focus:border-cyan-500 font-mono"
             >
-              <option value="score">Highest Score (Best Quality)</option>
               <option value="recent">Most Recent (Latest News)</option>
+              <option value="score">Highest Score (Best Quality)</option>
             </select>
           </div>
         </div>
@@ -94,7 +101,7 @@ export const TopicDiscovery: React.FC = () => {
                 <span className="text-amber-400 font-bold font-mono text-xs">Score: {t.score?.overall || 8.5}/10</span>
               </div>
               <h3 className="text-sm font-bold text-white line-clamp-2">{t.title}</h3>
-              <p className="text-xs text-gray-400 line-clamp-3 leading-relaxed">{t.summary}</p>
+              <p className="text-xs text-gray-400 line-clamp-3 leading-relaxed">{cleanSummary(t.summary)}</p>
               <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs">
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${t.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
                   {t.status}
