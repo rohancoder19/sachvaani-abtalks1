@@ -8,9 +8,12 @@ export const LiveFeed: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchFeed = useCallback(async () => {
+  const fetchFeed = useCallback(async (triggerCycle = false) => {
     try {
       setIsRefreshing(true);
+      if (triggerCycle) {
+        await agentApi.initializeAgent();
+      }
       const res = await agentApi.getFeed();
       if (res.success) setPosts(res.data || []);
     } catch (err) {
@@ -90,12 +93,12 @@ export const LiveFeed: React.FC = () => {
         </div>
 
         <button
-          onClick={fetchFeed}
+          onClick={() => fetchFeed(true)}
           disabled={isRefreshing}
           className="px-3.5 py-2 rounded-xl bg-surface hover:bg-slate-800 border border-border/80 text-xs font-semibold text-gray-300 hover:text-white transition-all flex items-center space-x-2 shrink-0 disabled:opacity-50"
         >
           <RefreshCw className={`w-3.5 h-3.5 text-indigo-400 ${isRefreshing ? 'animate-spin' : ''}`} />
-          <span>{isRefreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
+          <span>{isRefreshing ? 'Generating Live Posts...' : 'Refresh Feed'}</span>
         </button>
       </div>
 
