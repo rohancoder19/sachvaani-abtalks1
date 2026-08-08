@@ -11,7 +11,22 @@ import { authenticateJWT } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Health Check
+// Health Check & Root Info
+router.get('/', (req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'ABTalks Autonomous AI Creator Backend API Gateway',
+    version: '1.0.0',
+    status: 'online',
+    endpoints: {
+      health: '/health',
+      apiV1: '/api/v1',
+      posts: '/api/v1/posts',
+      persona: '/api/v1/persona',
+      feed: '/api/v1/agent/feed'
+    }
+  });
+});
 router.get('/health', getHealthStatus);
 
 // Auth Routes
