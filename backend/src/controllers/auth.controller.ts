@@ -23,7 +23,7 @@ export const register = async (req: Request, res: Response): Promise<void> => {
       if (mongoose.connection.readyState === 1) {
         const existingUser = await UserModel.findOne({ email: email.toLowerCase() });
         if (existingUser) {
-          res.status(400).json({ success: false, error: 'User with this email already exists' });
+          res.status(400).json({ success: false, error: 'An account with this email already exists. Please sign in.' });
           return;
         }
 
