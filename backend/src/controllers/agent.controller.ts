@@ -80,6 +80,20 @@ export const runDirectAutonomousCycle = async (agentId: string, personaContext?:
       return aiData;
     }
 
+    // Additional multi-layered duplicate protection by title/text
+    const normalizedNewTitle = (aiData.topic.title || '').trim().toLowerCase();
+    const existingPostWithSameTitle = await PostModel.findOne({
+      agentId,
+      $or: [
+        { topicTitle: { $regex: new RegExp(`^${normalizedNewTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } },
+        { text: { $regex: new RegExp(normalizedNewTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') } }
+      ]
+    });
+    if (existingPostWithSameTitle) {
+      logger.warn(`⚠️ Duplicate post text/title detected for Agent [${agentId}]: "${aiData.topic.title}"`);
+      return aiData;
+    }
+
     // Format sources as array of objects for DB model
     const formattedSources = Array.isArray(aiData.post.sources)
       ? aiData.post.sources.map((s: any) => typeof s === 'string' ? { title: aiData.topic.source || 'Source', url: s } : { title: s.title || aiData.topic.source || 'Source', url: s.url || s })
@@ -189,21 +203,7 @@ export const initAgentTask = async (req: Request, res: Response): Promise<void> 
 
 /**
  * Evaluator API Endpoint: GET /api/agent/feed?agentId=abc-123
- * 
- * Response:
- * {
- *   "posts": [
- *     {
- *       "id": "...",
- *       "createdAt": "2026-08-09T12:00:00.000Z",
- *       "text": "...",
- *       "rationale": "...",
- *       "sources": [
- *         "https://..."
- *       ]
- *     }
- *   ]
- * }
+ * Also supports: GET /api/feed & GET /api/v1/posts with pagination (page, limit)
  */
 export const getAgentFeed = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -211,9 +211,9 @@ export const getAgentFeed = async (req: Request, res: Response): Promise<void> =
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
-    const agentId = (req.query.agentId || req.query.personaId || '').toString();
+    const reqAgentId = (req.query.agentId || req.query.personaId || '').toString();
 
-    if (!agentId) {
+    if (!reqAgentId) {
       res.status(400).json({
         success: false,
         error: 'Missing required parameter: agentId'
@@ -221,20 +221,27 @@ export const getAgentFeed = async (req: Request, res: Response): Promise<void> =
       return;
     }
 
-    // Find posts matching agentId (or legacy personaId for backwards compatibility)
-    const isObjectId = mongoose.Types.ObjectId.isValid(agentId);
-    const findQuery = isObjectId
-      ? { $or: [{ agentId }, { personaId: agentId }] }
-      : { agentId };
+    const page = Math.max(1, parseInt((req.query.page || '1').toString(), 10));
+    const limit = Math.max(1, Math.min(100, parseInt((req.query.limit || '20').toString(), 10)));
+    const skip = (page - 1) * limit;
+
+    const isObjectId = mongoose.Types.ObjectId.isValid(reqAgentId);
+    const findQuery: any = isObjectId
+      ? { $or: [{ agentId: reqAgentId }, { personaId: reqAgentId }] }
+      : { agentId: reqAgentId };
+
+    const total = await PostModel.countDocuments(findQuery);
 
     const rawPosts = await PostModel.find(findQuery)
       .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
       .lean();
-
 
     // Format posts strictly according to Feed Endpoint Spec
     const formattedPosts = rawPosts.map((p: any) => ({
       id: p._id.toString(),
+      agentId: p.agentId || reqAgentId,
       createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
       text: p.text || '',
       rationale: p.rationale || '',
@@ -248,7 +255,13 @@ export const getAgentFeed = async (req: Request, res: Response): Promise<void> =
     }));
 
     res.status(200).json({
-      posts: formattedPosts
+      posts: formattedPosts,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit) || 1
+      }
     });
   } catch (error: any) {
     logger.error('Error fetching agent feed:', error);

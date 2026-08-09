@@ -37,6 +37,7 @@ router.get('/auth/me', authenticateJWT as any, getCurrentUser);
 // Autonomous Agent Routes
 router.post('/agent/init', initAgentTask);
 router.get('/agent/feed', getAgentFeed);
+router.get('/feed', getAgentFeed);
 
 // Entity Routes
 router.get('/persona', getPersonas);

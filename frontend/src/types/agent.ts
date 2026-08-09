@@ -26,6 +26,12 @@ export interface Post {
 
 export interface FeedResponse {
   posts: Post[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
   success?: boolean;
   error?: string;
 }

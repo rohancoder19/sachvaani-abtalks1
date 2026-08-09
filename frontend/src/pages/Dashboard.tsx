@@ -33,6 +33,12 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     loadData();
+
+    const interval = setInterval(() => {
+      loadData();
+    }, 30000);
+
+    return () => clearInterval(interval);
   }, [loadData, lastEvent]);
 
   const handleInitAgent = async () => {

@@ -26,17 +26,19 @@ export const agentApi = {
     const res = await apiClient.post('/agent/init', { persona });
     return res.data;
   },
-  getFeed: async (agentId?: string, page = 1, limit = 10): Promise<FeedResponse> => {
+  getFeed: async (agentId?: string, page = 1, limit = 20): Promise<FeedResponse> => {
     const activeAgentId = agentId || localStorage.getItem('activeAgentId') || 'ada-ai-security';
     const res = await apiClient.get(`/agent/feed?agentId=${encodeURIComponent(activeAgentId)}&page=${page}&limit=${limit}&_t=${Date.now()}`);
     return {
-      posts: Array.isArray(res.data?.posts) ? res.data.posts : (Array.isArray(res.data?.data) ? res.data.data : [])
+      posts: Array.isArray(res.data?.posts) ? res.data.posts : (Array.isArray(res.data?.data) ? res.data.data : []),
+      pagination: res.data?.pagination
     };
   },
-  getAgentFeedByAgentId: async (agentId: string): Promise<FeedResponse> => {
-    const res = await apiClient.get(`/agent/feed?agentId=${encodeURIComponent(agentId)}&_t=${Date.now()}`);
+  getAgentFeedByAgentId: async (agentId: string, page = 1, limit = 20): Promise<FeedResponse> => {
+    const res = await apiClient.get(`/agent/feed?agentId=${encodeURIComponent(agentId)}&page=${page}&limit=${limit}&_t=${Date.now()}`);
     return {
-      posts: Array.isArray(res.data?.posts) ? res.data.posts : (Array.isArray(res.data?.data) ? res.data.data : [])
+      posts: Array.isArray(res.data?.posts) ? res.data.posts : (Array.isArray(res.data?.data) ? res.data.data : []),
+      pagination: res.data?.pagination
     };
   },
 

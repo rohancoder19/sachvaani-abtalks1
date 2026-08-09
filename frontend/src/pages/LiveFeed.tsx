@@ -12,6 +12,9 @@ export const LiveFeed: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [activeAgentId, setActiveAgentId] = useState<string>('');
 
+  const [hasNewPosts, setHasNewPosts] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<string>('Just now');
+
   const getTargetAgentId = useCallback(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const paramId = searchParams.get('agentId');
@@ -19,27 +22,30 @@ export const LiveFeed: React.FC = () => {
     return paramId || storedId || 'ada-ai-security';
   }, []);
 
-  const fetchFeed = useCallback(async () => {
+  const fetchFeed = useCallback(async (isSilent = false) => {
     const agentId = getTargetAgentId();
     setActiveAgentId(agentId);
     setErrorMsg(null);
-    setIsRefreshing(true);
-
-    console.log('[LiveFeed] agentId:', agentId);
-    console.log('[LiveFeed] API URL:', `/api/v1/agent/feed?agentId=${agentId}`);
+    if (!isSilent) setIsRefreshing(true);
 
     try {
       const res = await agentApi.getFeed(agentId);
-      console.log('[LiveFeed] response:', res);
-      console.log('[LiveFeed] posts count:', res.posts?.length || 0);
+      const fetchedPosts = res.posts || [];
 
-      setPosts(res.posts || []);
+      setPosts((prevPosts) => {
+        if (isSilent && prevPosts.length > 0 && fetchedPosts.length > prevPosts.length) {
+          setHasNewPosts(true);
+          return fetchedPosts;
+        }
+        return fetchedPosts;
+      });
+      setLastUpdated(new Date().toLocaleTimeString());
     } catch (err: any) {
       console.error('[LiveFeed] error fetching live feed:', err);
       const message = err.response?.data?.error || err.message || 'Failed to fetch live feed';
-      setErrorMsg(message);
+      if (!isSilent) setErrorMsg(message);
     } finally {
-      setIsRefreshing(false);
+      if (!isSilent) setIsRefreshing(false);
     }
   }, [getTargetAgentId]);
 
@@ -64,15 +70,24 @@ export const LiveFeed: React.FC = () => {
     }
   };
 
+  // Initial fetch + 30s polling fallback (cleans up on unmount)
   useEffect(() => {
     fetchFeed();
+
+    const pollTimer = setInterval(() => {
+      fetchFeed(true);
+    }, 30000);
+
+    return () => clearInterval(pollTimer);
   }, [fetchFeed]);
 
+  // Real-time Socket.IO listener trigger
   useEffect(() => {
     if (lastEvent) {
       console.log('[LiveFeed] Socket event received:', lastEvent);
       if (!lastEvent.agentId || lastEvent.agentId === activeAgentId) {
-        fetchFeed();
+        fetchFeed(true);
+        setHasNewPosts(true);
       }
     }
   }, [lastEvent, activeAgentId, fetchFeed]);
@@ -92,13 +107,13 @@ export const LiveFeed: React.FC = () => {
               </span>
             </h2>
             <p className="text-xs text-gray-400 truncate">
-              Real-time feed of posts published automatically by Agent: <code className="text-indigo-300 font-mono">{activeAgentId || 'ada-ai-security'}</code>
+              Real-time feed for Agent: <code className="text-indigo-300 font-mono">{activeAgentId || 'ada-ai-security'}</code> • Updated: <span className="text-gray-300 font-mono">{lastUpdated}</span>
             </p>
           </div>
         </div>
 
         <button
-          onClick={() => fetchFeed()}
+          onClick={() => { setHasNewPosts(false); fetchFeed(); }}
           disabled={isRefreshing}
           className="px-4 py-2.5 rounded-xl bg-surface hover:bg-slate-800 border border-border/80 text-xs font-semibold text-gray-300 hover:text-white transition-all flex items-center justify-center space-x-2 shrink-0 disabled:opacity-50 touch-target w-full sm:w-auto"
         >
@@ -106,6 +121,21 @@ export const LiveFeed: React.FC = () => {
           <span>{isRefreshing ? 'Refreshing...' : 'Refresh Feed'}</span>
         </button>
       </div>
+
+      {hasNewPosts && (
+        <div className="p-3.5 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
+            <span>New posts available in the autonomous feed!</span>
+          </div>
+          <button
+            onClick={() => { setHasNewPosts(false); fetchFeed(); }}
+            className="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] transition-all"
+          >
+            View new posts
+          </button>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-3">

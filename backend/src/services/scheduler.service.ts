@@ -90,6 +90,11 @@ class AutonomousSchedulerService {
             post: cycleData.post,
             timestamp: new Date()
           });
+          ioInstance.emit('new_post', {
+            agentId,
+            post: cycleData.post,
+            timestamp: new Date()
+          });
         }
       }
 
@@ -129,7 +134,8 @@ class AutonomousSchedulerService {
   }
 
   /**
-   * Called on server boot to auto-resume all active autonomous agents from MongoDB
+   * Called on server boot to auto-resume all active autonomous agents from MongoDB.
+   * If an agent hasn't run in >30 minutes (e.g. after Render process wake-up), triggers cycle immediately.
    */
   async initOnStartup(ioInstance?: any): Promise<void> {
     try {
@@ -154,14 +160,18 @@ class AutonomousSchedulerService {
       for (const agent of activeAgents) {
         this.startScheduler(agent.agentId, 30, ioInstance);
 
-        // Seed initial post immediately on startup if agent has 0 published posts
+        const lastRun = agent.lastRunAt ? agent.lastRunAt.getTime() : 0;
+        const thirtyMinsInMs = 30 * 60 * 1000;
+        const isOverdue = (Date.now() - lastRun) >= thirtyMinsInMs;
+
+        // Seed initial post immediately on startup if agent has 0 published posts or is overdue
         PostModel.countDocuments({
           $or: [{ agentId: agent.agentId }, { personaId: agent.agentId }]
         }).then((count: number) => {
-          if (count === 0) {
-            logger.info(`🌱 Agent [${agent.agentId}] has 0 posts. Seeding initial autonomous post on startup...`);
+          if (count === 0 || isOverdue) {
+            logger.info(`🌱 Agent [${agent.agentId}] (posts: ${count}, overdue: ${isOverdue}). Triggering startup cycle...`);
             this.executeCycle(agent.agentId, ioInstance).catch((err: any) => {
-              logger.error(`Error seeding initial post for Agent [${agent.agentId}]:`, err);
+              logger.error(`Error executing startup cycle for Agent [${agent.agentId}]:`, err);
             });
           }
         }).catch((err: any) => logger.error('Error checking post count on startup:', err));

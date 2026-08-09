@@ -45,6 +45,14 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       setLastEvent(data);
     });
 
+    socketInstance.on('POST_PUBLISHED', (data) => {
+      setLastEvent(data);
+    });
+
+    socketInstance.on('new_post', (data) => {
+      setLastEvent(data);
+    });
+
     setSocket(socketInstance);
 
     return () => {
