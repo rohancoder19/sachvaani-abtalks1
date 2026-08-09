@@ -34,8 +34,11 @@ class AutonomousAIPipeline:
             elif eval_result["status"] == "APPROVED":
                 non_duplicate_approved.append(t)
 
-        # Sort non-duplicate approved topics by overall score descending
-        non_duplicate_approved.sort(key=lambda x: x.get("score", {}).get("overall", 0.0), reverse=True)
+        # Sort non-duplicate approved topics by publication date (recency) and editorial score
+        non_duplicate_approved.sort(
+            key=lambda x: (x.get("publishedTs", 0.0), x.get("score", {}).get("overall", 0.0)),
+            reverse=True
+        )
 
         if not non_duplicate_approved:
             # If no candidate passes quality threshold or all are duplicates, return cycle status without creating a post

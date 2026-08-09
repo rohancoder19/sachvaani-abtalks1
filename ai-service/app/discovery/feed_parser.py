@@ -1,5 +1,6 @@
 import feedparser
 import hashlib
+import time
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -34,13 +35,24 @@ def fetch_single_source(source: Dict[str, str]) -> List[Dict[str, Any]]:
             url_hash = hashlib.sha256(url.encode('utf-8')).hexdigest()
             published_at = entry.get("published", entry.get("updated", ""))
             
+            # Parse publication timestamp safely
+            published_struct = entry.get("published_parsed") or entry.get("updated_parsed")
+            if published_struct:
+                try:
+                    published_ts = float(time.mktime(published_struct))
+                except Exception:
+                    published_ts = time.time()
+            else:
+                published_ts = time.time()
+
             items.append({
                 "title": title,
                 "summary": summary[:400],
                 "source": source["name"],
                 "url": url,
                 "urlHash": url_hash,
-                "publishedAt": published_at
+                "publishedAt": published_at,
+                "publishedTs": published_ts
             })
     except Exception as e:
         print(f"Error fetching source {source['name']}: {e}")
@@ -57,35 +69,43 @@ def fetch_live_topics() -> List[Dict[str, Any]]:
             except Exception as e:
                 print(f"Error reading thread result: {e}")
 
+    # Sort topics by publication timestamp descending so freshest articles are first
+    topics.sort(key=lambda x: x.get("publishedTs", 0.0), reverse=True)
+
     if len(topics) == 0:
+        now_ts = time.time()
         topics = [
             {
                 "title": "Google DeepMind Unveils Multi-Agent Reasoning Framework for Autonomous Systems",
                 "summary": "A novel architectural framework demonstrates self-correcting chain-of-thought capabilities, sub-second vector context retrieval, and multi-domain task planning.",
                 "source": "Google DeepMind Blog",
                 "url": "https://deepmind.google/discover/blog/multi-agent-reasoning-framework/",
-                "urlHash": hashlib.sha256("https://deepmind.google/discover/blog/multi-agent-reasoning-framework/".encode('utf-8')).hexdigest()
+                "urlHash": hashlib.sha256("https://deepmind.google/discover/blog/multi-agent-reasoning-framework/".encode('utf-8')).hexdigest(),
+                "publishedTs": now_ts - 3600
             },
             {
                 "title": "Anthropic Releases Claude 3.7 Sonnet with Hybrid Reasoning & Security Benchmarks",
                 "summary": "Anthropic's latest release introduces real-time reasoning controls alongside automated vulnerability detection in modern cloud software infrastructure.",
                 "source": "Anthropic Research",
                 "url": "https://www.anthropic.com/news/claude-3-7-sonnet",
-                "urlHash": hashlib.sha256("https://www.anthropic.com/news/claude-3-7-sonnet".encode('utf-8')).hexdigest()
+                "urlHash": hashlib.sha256("https://www.anthropic.com/news/claude-3-7-sonnet".encode('utf-8')).hexdigest(),
+                "publishedTs": now_ts - 7200
             },
             {
                 "title": "OpenAI Announces Enterprise Multi-Agent Workflows & Real-Time Security APIs",
                 "summary": "OpenAI introduces dedicated agentic APIs with strict tool sandbox isolation, automated memory retention, and low-latency evaluation pipelines.",
                 "source": "OpenAI Official Blog",
                 "url": "https://openai.com/index/enterprise-multi-agent-workflows/",
-                "urlHash": hashlib.sha256("https://openai.com/index/enterprise-multi-agent-workflows/".encode('utf-8')).hexdigest()
+                "urlHash": hashlib.sha256("https://openai.com/index/enterprise-multi-agent-workflows/".encode('utf-8')).hexdigest(),
+                "publishedTs": now_ts - 10800
             },
             {
                 "title": "Meta Open-Sources Llama 4 Infrastructure with Vector Context Retention",
                 "summary": "Meta releases open-source tooling for long-term vector memory indexing, enabling autonomous agentic memory deduplication on edge hardware.",
                 "source": "Meta AI Engineering",
                 "url": "https://ai.meta.com/blog/llama-4-infrastructure-vector-context/",
-                "urlHash": hashlib.sha256("https://ai.meta.com/blog/llama-4-infrastructure-vector-context/".encode('utf-8')).hexdigest()
+                "urlHash": hashlib.sha256("https://ai.meta.com/blog/llama-4-infrastructure-vector-context/".encode('utf-8')).hexdigest(),
+                "publishedTs": now_ts - 14400
             }
         ]
 
