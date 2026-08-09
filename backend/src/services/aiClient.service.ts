@@ -21,7 +21,9 @@ export class AIClientService {
       });
       return response.data;
     } catch (error: any) {
-      logger.error(`❌ Python AI Service request failed for agent ${agentId}:`, error.response?.data || error.message || error);
+      logger.error(`[AI SERVICE] request failed for agent ${agentId}`);
+      logger.error(`[AI SERVICE] status: ${error.response?.status || 'N/A'}`);
+      logger.error(`[AI SERVICE] response: ${JSON.stringify(error.response?.data || error.message || error)}`);
       throw new Error(`Python AI Microservice unavailable: ${error.message || 'Connection failed'}`);
     }
   }

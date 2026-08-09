@@ -25,6 +25,7 @@ export const EvaluatorSimulation: React.FC = () => {
       });
       setInitResult(res);
       if (res?.agentId) {
+        localStorage.setItem('activeAgentId', res.agentId);
         setFeedAgentId(res.agentId);
       }
     } catch (err: any) {

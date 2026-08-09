@@ -84,6 +84,13 @@ class AutonomousSchedulerService {
           result: cycleData,
           timestamp: new Date()
         });
+        if (cycleData?.post) {
+          ioInstance.emit('POST_PUBLISHED', {
+            agentId,
+            post: cycleData.post,
+            timestamp: new Date()
+          });
+        }
       }
 
       await LogModel.create({

@@ -232,15 +232,19 @@ export const getAgentFeed = async (req: Request, res: Response): Promise<void> =
       .lean();
 
 
-    // Format posts strictly according to Hackathon Feed Endpoint Spec
+    // Format posts strictly according to Feed Endpoint Spec
     const formattedPosts = rawPosts.map((p: any) => ({
       id: p._id.toString(),
       createdAt: p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString(),
       text: p.text || '',
       rationale: p.rationale || '',
       sources: Array.isArray(p.sources)
-        ? p.sources.map((s: any) => typeof s === 'string' ? s : (s.url || 'https://techcrunch.com'))
-        : []
+        ? p.sources
+            .map((s: any) => (typeof s === 'string' ? s : (s?.url || '')))
+            .filter((url: string) => Boolean(url))
+        : [],
+      tags: Array.isArray(p.tags) ? p.tags : [],
+      metrics: p.metrics || { views: 0, shares: 0, likes: 0 }
     }));
 
     res.status(200).json({

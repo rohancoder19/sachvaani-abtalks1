@@ -1,35 +1,81 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Rss, ExternalLink, Share2, Heart, Sparkles, RefreshCw } from 'lucide-react';
+import { Rss, ExternalLink, Share2, Heart, Sparkles, RefreshCw, AlertCircle, Play } from 'lucide-react';
 import { agentApi } from '../services/api.client';
 import { useSocket } from '../context/SocketContext';
+import { Post } from '../types/agent';
 
 export const LiveFeed: React.FC = () => {
   const { lastEvent } = useSocket();
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [activeAgentId, setActiveAgentId] = useState<string>('');
+
+  const getTargetAgentId = useCallback(() => {
+    const searchParams = new URLSearchParams(window.location.search);
+    const paramId = searchParams.get('agentId');
+    const storedId = localStorage.getItem('activeAgentId');
+    return paramId || storedId || 'ada-ai-security';
+  }, []);
 
   const fetchFeed = useCallback(async () => {
+    const agentId = getTargetAgentId();
+    setActiveAgentId(agentId);
+    setErrorMsg(null);
+    setIsRefreshing(true);
+
+    console.log('[LiveFeed] agentId:', agentId);
+    console.log('[LiveFeed] API URL:', `/api/v1/agent/feed?agentId=${agentId}`);
+
     try {
-      setIsRefreshing(true);
-      const searchParams = new URLSearchParams(window.location.search);
-      const targetAgentId = searchParams.get('agentId') || 'ada-ai-security';
-      const res = await agentApi.getFeed(targetAgentId);
-      if (res.posts) {
-        setPosts(res.posts || []);
-      } else if (res.success && res.data) {
-        setPosts(res.data || []);
-      }
-    } catch (err) {
-      console.error('Error fetching live feed:', err);
+      const res = await agentApi.getFeed(agentId);
+      console.log('[LiveFeed] response:', res);
+      console.log('[LiveFeed] posts count:', res.posts?.length || 0);
+
+      setPosts(res.posts || []);
+    } catch (err: any) {
+      console.error('[LiveFeed] error fetching live feed:', err);
+      const message = err.response?.data?.error || err.message || 'Failed to fetch live feed';
+      setErrorMsg(message);
     } finally {
       setIsRefreshing(false);
     }
-  }, []);
+  }, [getTargetAgentId]);
 
+  const handleRunAutonomousCycle = async () => {
+    try {
+      setIsInitializing(true);
+      setErrorMsg(null);
+      const res = await agentApi.initializeAgentWithPersona({
+        name: 'Ada',
+        domain: 'AI Security'
+      });
+      if (res?.agentId) {
+        localStorage.setItem('activeAgentId', res.agentId);
+        setActiveAgentId(res.agentId);
+      }
+      await fetchFeed();
+    } catch (err: any) {
+      console.error('[LiveFeed] Error running autonomous cycle:', err);
+      setErrorMsg(err.response?.data?.error || err.message || 'Failed to initialize agent');
+    } finally {
+      setIsInitializing(false);
+    }
+  };
 
   useEffect(() => {
     fetchFeed();
-  }, [fetchFeed, lastEvent]);
+  }, [fetchFeed]);
+
+  useEffect(() => {
+    if (lastEvent) {
+      console.log('[LiveFeed] Socket event received:', lastEvent);
+      if (!lastEvent.agentId || lastEvent.agentId === activeAgentId) {
+        fetchFeed();
+      }
+    }
+  }, [lastEvent, activeAgentId, fetchFeed]);
 
   return (
     <div className="space-y-6 max-w-4xl pb-12">
@@ -42,10 +88,12 @@ export const LiveFeed: React.FC = () => {
             <h2 className="text-xl font-bold text-white flex items-center gap-2">
               <span>Autonomous Published Feed</span>
               <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                GET /api/agent/feed
+                GET /api/v1/agent/feed
               </span>
             </h2>
-            <p className="text-xs text-gray-400">Real-time feed of posts published automatically by Ada (AI Security).</p>
+            <p className="text-xs text-gray-400">
+              Real-time feed of posts published automatically by Agent: <code className="text-indigo-300 font-mono">{activeAgentId || 'ada-ai-security'}</code>
+            </p>
           </div>
         </div>
 
@@ -59,18 +107,52 @@ export const LiveFeed: React.FC = () => {
         </button>
       </div>
 
+      {errorMsg && (
+        <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <div>
+            <p className="font-bold">Error Loading Feed</p>
+            <p className="text-rose-300 font-normal">{errorMsg}</p>
+          </div>
+        </div>
+      )}
+
+      {isInitializing && (
+        <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-xs font-semibold flex items-center gap-3">
+          <RefreshCw className="w-5 h-5 animate-spin shrink-0 text-indigo-400" />
+          <div>
+            <p className="font-bold">Agent initialized — generating your first autonomous post...</p>
+            <p className="text-gray-400 font-normal">Topic discovery, editorial scoring, and LLM synthesis in progress.</p>
+          </div>
+        </div>
+      )}
+
       <div className="space-y-5">
-        {posts.length === 0 ? (
-          <div className="p-10 rounded-2xl bg-surface border border-border/80 text-center space-y-3">
+        {!isRefreshing && posts.length === 0 && !errorMsg ? (
+          <div className="p-10 rounded-2xl bg-surface border border-border/80 text-center space-y-4">
             <Sparkles className="w-10 h-10 text-indigo-400 mx-auto" />
-            <p className="text-gray-300 font-medium">No published posts found in feed</p>
-            <p className="text-xs text-gray-500">
-              Run <code className="text-indigo-300 font-mono">POST /api/agent/init</code> to trigger background topic discovery and post generation.
-            </p>
+            <div className="space-y-1">
+              <p className="text-gray-200 font-semibold text-base">No autonomous posts yet.</p>
+              <p className="text-xs text-gray-400 max-w-md mx-auto">
+                The agent is discovering topics and generating its first publication.
+              </p>
+            </div>
+            <button
+              onClick={handleRunAutonomousCycle}
+              disabled={isInitializing}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs transition-all shadow-lg shadow-indigo-600/25 inline-flex items-center gap-2 disabled:opacity-50"
+            >
+              {isInitializing ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 fill-white" />
+              )}
+              <span>Run Autonomous Cycle</span>
+            </button>
           </div>
         ) : (
           posts.map((post) => {
-            const postId = post.id || post._id;
+            const postId = post.id || post._id || `post_${Math.random()}`;
             const createdAtStr = post.createdAt ? new Date(post.createdAt).toISOString() : new Date().toISOString();
             const sourcesList = Array.isArray(post.sources) ? post.sources : [];
 
@@ -80,7 +162,7 @@ export const LiveFeed: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <span className="px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-semibold flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                      Ada — AI Systems & Technology Intelligence
+                      {post.agentId || activeAgentId || 'Autonomous Persona'}
                     </span>
                     <span className="font-mono text-gray-500 text-[11px]">ID: {postId}</span>
                   </div>
@@ -99,30 +181,44 @@ export const LiveFeed: React.FC = () => {
                   })}
                 </div>
 
-                <div className="p-4 rounded-xl bg-[#080C14] border border-indigo-500/20 text-xs space-y-1">
-                  <span className="font-bold text-indigo-400 font-mono text-[11px] uppercase tracking-wider block">
-                    Editorial Selection & Quality Rationale:
-                  </span>
-                  <p className="text-gray-300 leading-relaxed text-xs">{post.rationale}</p>
-                </div>
+                {post.rationale && (
+                  <div className="p-4 rounded-xl bg-[#080C14] border border-indigo-500/20 text-xs space-y-1">
+                    <span className="font-bold text-indigo-400 font-mono text-[11px] uppercase tracking-wider block">
+                      Editorial Selection & Quality Rationale:
+                    </span>
+                    <p className="text-gray-300 leading-relaxed text-xs">{post.rationale}</p>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-3 border-t border-border/60 text-xs text-gray-400">
                   <div className="flex items-center space-x-4">
                     <span className="flex items-center space-x-1.5 text-gray-400">
                       <Heart className="w-4 h-4 text-rose-500/80" />
-                      <span className="font-mono">{post.metrics?.likes || 24}</span>
+                      <span className="font-mono">{post.metrics?.likes ?? 0}</span>
                     </span>
                     <span className="flex items-center space-x-1.5 text-gray-400">
                       <Share2 className="w-4 h-4 text-cyan-400/80" />
-                      <span className="font-mono">{post.metrics?.shares || 8}</span>
+                      <span className="font-mono">{post.metrics?.shares ?? 0}</span>
                     </span>
                   </div>
 
-                  {sourcesList.length > 0 && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-[11px] font-mono text-gray-500">Sources:</span>
-                      {sourcesList.map((src: any, sIdx: number) => {
-                        const urlStr = typeof src === 'string' ? src : (src.url || 'https://techcrunch.com');
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[11px] font-mono text-gray-500">Sources:</span>
+                    {sourcesList.length === 0 ? (
+                      <span className="text-xs text-gray-500 italic">Source unavailable</span>
+                    ) : (
+                      sourcesList.map((src: any, sIdx: number) => {
+                        const urlStr = typeof src === 'string' ? src : src?.url;
+                        const titleStr = typeof src === 'object' && src?.title ? src.title : 'Link';
+
+                        if (!urlStr) {
+                          return (
+                            <span key={sIdx} className="text-xs text-gray-500 italic">
+                              Source unavailable
+                            </span>
+                          );
+                        }
+
                         return (
                           <a
                             key={sIdx}
@@ -131,13 +227,13 @@ export const LiveFeed: React.FC = () => {
                             rel="noreferrer"
                             className="flex items-center space-x-1 text-cyan-400 hover:text-cyan-300 hover:underline font-mono text-xs"
                           >
-                            <span>Link</span>
+                            <span>{titleStr}</span>
                             <ExternalLink className="w-3 h-3" />
                           </a>
                         );
-                      })}
-                    </div>
-                  )}
+                      })
+                    )}
+                  </div>
                 </div>
               </div>
             );

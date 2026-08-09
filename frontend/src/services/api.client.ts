@@ -1,5 +1,7 @@
 import axios from 'axios';
 
+import { FeedResponse, InitAgentResponse } from '../types/agent';
+
 const getBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
   if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
@@ -16,22 +18,26 @@ export const apiClient = axios.create({
 });
 
 export const agentApi = {
-  initializeAgent: async (personaId?: string) => {
+  initializeAgent: async (personaId?: string): Promise<InitAgentResponse> => {
     const res = await apiClient.post('/agent/init', { personaId });
     return res.data;
   },
-  initializeAgentWithPersona: async (persona: { name: string; domain: string }) => {
+  initializeAgentWithPersona: async (persona: { name: string; domain: string }): Promise<InitAgentResponse> => {
     const res = await apiClient.post('/agent/init', { persona });
     return res.data;
   },
-  getFeed: async (agentId?: string, page = 1, limit = 10) => {
-    const targetAgentId = agentId || 'ada-ai-security';
-    const res = await apiClient.get(`/agent/feed?agentId=${targetAgentId}&page=${page}&limit=${limit}&_t=${Date.now()}`);
-    return res.data;
+  getFeed: async (agentId?: string, page = 1, limit = 10): Promise<FeedResponse> => {
+    const activeAgentId = agentId || localStorage.getItem('activeAgentId') || 'ada-ai-security';
+    const res = await apiClient.get(`/agent/feed?agentId=${encodeURIComponent(activeAgentId)}&page=${page}&limit=${limit}&_t=${Date.now()}`);
+    return {
+      posts: Array.isArray(res.data?.posts) ? res.data.posts : (Array.isArray(res.data?.data) ? res.data.data : [])
+    };
   },
-  getAgentFeedByAgentId: async (agentId: string) => {
-    const res = await apiClient.get(`/agent/feed?agentId=${agentId}&_t=${Date.now()}`);
-    return res.data;
+  getAgentFeedByAgentId: async (agentId: string): Promise<FeedResponse> => {
+    const res = await apiClient.get(`/agent/feed?agentId=${encodeURIComponent(agentId)}&_t=${Date.now()}`);
+    return {
+      posts: Array.isArray(res.data?.posts) ? res.data.posts : (Array.isArray(res.data?.data) ? res.data.data : [])
+    };
   },
 
   getPersonas: async () => {

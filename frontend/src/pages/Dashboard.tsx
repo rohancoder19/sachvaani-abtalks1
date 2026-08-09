@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Activity, Clock, CheckCircle2, Database, Brain, Sparkles, ExternalLink, ShieldCheck, ArrowRight, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Play, Activity, CheckCircle2, Database, Brain, Sparkles, ExternalLink, ShieldCheck } from 'lucide-react';
 import { StatusCard } from '../components/dashboard/StatusCard';
 import { agentApi } from '../services/api.client';
 import { useSocket } from '../context/SocketContext';
@@ -11,13 +11,14 @@ export const Dashboard: React.FC = () => {
   const [topics, setTopics] = useState<any[]>([]);
   const [schedulerStatus, setSchedulerStatus] = useState<any>(null);
   const [activeAgent, setActiveAgent] = useState<any>({
-    agentId: 'ada-ai-security',
+    agentId: localStorage.getItem('activeAgentId') || 'ada-ai-security',
     persona: { name: 'Ada', domain: 'AI Security' }
   });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      const feedRes = await agentApi.getFeed('ada-ai-security');
+      const currentAgentId = localStorage.getItem('activeAgentId') || activeAgent.agentId || 'ada-ai-security';
+      const feedRes = await agentApi.getFeed(currentAgentId);
       if (feedRes.posts) setFeed(feedRes.posts || []);
 
       const topicsRes = await agentApi.getTopics();
@@ -28,11 +29,11 @@ export const Dashboard: React.FC = () => {
     } catch (err) {
       console.error('Error fetching dashboard metrics:', err);
     }
-  };
+  }, [activeAgent.agentId]);
 
   useEffect(() => {
     loadData();
-  }, [lastEvent]);
+  }, [loadData, lastEvent]);
 
   const handleInitAgent = async () => {
     try {
@@ -42,6 +43,7 @@ export const Dashboard: React.FC = () => {
         domain: 'AI Security'
       });
       if (res?.agentId) {
+        localStorage.setItem('activeAgentId', res.agentId);
         setActiveAgent((prev: any) => ({ ...prev, agentId: res.agentId }));
       }
       await loadData();
@@ -64,10 +66,10 @@ export const Dashboard: React.FC = () => {
           <div className="space-y-2 max-w-3xl">
             <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-bold uppercase tracking-widest">
               <Sparkles className="w-4 h-4 animate-pulse" />
-              <span>Hackathon AI Persona Engine</span>
+              <span>Autonomous AI Creator Platform</span>
             </div>
             <h1 className="text-3xl font-extrabold text-white tracking-tight">
-              ABTalks — Autonomous AI Creator
+              ABTalks — Sachvaani Autonomous AI
             </h1>
             <p className="text-base text-gray-300 font-medium">
               An AI creator that thinks, selects, remembers, and publishes independently without human prompts.
@@ -126,7 +128,7 @@ export const Dashboard: React.FC = () => {
         <StatusCard
           title="Autonomous Worker"
           value="ACTIVE"
-          subtitle="Interval: Every 15 Min"
+          subtitle={schedulerStatus?.running ? "Running Background" : "Interval: Every 30 Min"}
           icon={Activity}
           color="emerald"
         />
@@ -153,7 +155,7 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              Published Feed (GET /api/agent/feed)
+              Published Feed (GET /api/v1/agent/feed)
             </h3>
             <span className="text-xs text-indigo-400 font-mono bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
               Agent ID: {activeAgent.agentId}
@@ -166,65 +168,84 @@ export const Dashboard: React.FC = () => {
                 <Database className="w-12 h-12 text-gray-500 mx-auto" />
                 <p className="text-gray-300 font-semibold">Feed is currently empty</p>
                 <p className="text-xs text-gray-400 max-w-md mx-auto">
-                  Click "Trigger Autonomous Cycle" above or test <code className="text-indigo-300">POST /api/agent/init</code> to populate initial published posts.
+                  Click "Trigger Autonomous Cycle" above or test <code className="text-indigo-300 font-mono">POST /api/v1/agent/init</code> to populate initial published posts.
                 </p>
               </div>
             ) : (
-              feed.map((post: any) => (
-                <div key={post.id} className="p-6 rounded-2xl bg-surface border border-border/80 space-y-4 hover:border-indigo-500/40 transition-all shadow-lg">
-                  <div className="flex items-center justify-between text-xs">
-                    <div className="flex items-center space-x-2">
-                      <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30 flex items-center gap-1.5">
-                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Ada (AI Security)
-                      </span>
-                      <span className="text-gray-400 font-mono text-[11px]">ID: {post.id}</span>
+              feed.map((post: any) => {
+                const postId = post.id || post._id || `post_${Math.random()}`;
+                const sourcesList = Array.isArray(post.sources) ? post.sources : [];
+
+                return (
+                  <div key={postId} className="p-6 rounded-2xl bg-surface border border-border/80 space-y-4 hover:border-indigo-500/40 transition-all shadow-lg">
+                    <div className="flex items-center justify-between text-xs">
+                      <div className="flex items-center space-x-2">
+                        <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30 flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                          {post.agentId || activeAgent.agentId}
+                        </span>
+                        <span className="text-gray-400 font-mono text-[11px]">ID: {postId}</span>
+                      </div>
+                      <span className="font-mono text-gray-400">{new Date(post.createdAt).toLocaleTimeString()} UTC</span>
                     </div>
-                    <span className="font-mono text-gray-400">{new Date(post.createdAt).toLocaleTimeString()} UTC</span>
-                  </div>
 
-                  <div className="text-sm text-gray-200 leading-relaxed space-y-2">
-                    {post.text?.split('\n').map((line: string, idx: number) => {
-                      if (!line.trim()) return <div key={idx} className="h-1" />;
-                      const isHeader = line.startsWith('**') || line.startsWith('🚀');
-                      return (
-                        <p key={idx} className={isHeader ? 'font-bold text-white text-base' : 'text-gray-300 text-sm'}>
-                          {line.replace(/\*\*/g, '')}
-                        </p>
-                      );
-                    })}
-                  </div>
-
-                  {/* Editorial Rationale Box */}
-                  <div className="p-4 rounded-xl bg-[#080C14] border border-indigo-500/20 space-y-1">
-                    <div className="text-[11px] font-mono font-bold text-indigo-400 uppercase tracking-wider">
-                      Editorial Selection Rationale:
+                    <div className="text-sm text-gray-200 leading-relaxed space-y-2">
+                      {post.text?.split('\n').map((line: string, idx: number) => {
+                        if (!line.trim()) return <div key={idx} className="h-1" />;
+                        const isHeader = line.startsWith('**') || line.startsWith('🚀');
+                        return (
+                          <p key={idx} className={isHeader ? 'font-bold text-white text-base' : 'text-gray-300 text-sm'}>
+                            {line.replace(/\*\*/g, '')}
+                          </p>
+                        );
+                      })}
                     </div>
-                    <p className="text-xs text-gray-300 leading-relaxed">{post.rationale}</p>
-                  </div>
 
-                  {/* Sources Footnote */}
-                  {post.sources && post.sources.length > 0 && (
+                    {/* Editorial Rationale Box */}
+                    {post.rationale && (
+                      <div className="p-4 rounded-xl bg-[#080C14] border border-indigo-500/20 space-y-1">
+                        <div className="text-[11px] font-mono font-bold text-indigo-400 uppercase tracking-wider">
+                          Editorial Selection Rationale:
+                        </div>
+                        <p className="text-xs text-gray-300 leading-relaxed">{post.rationale}</p>
+                      </div>
+                    )}
+
+                    {/* Sources Footnote */}
                     <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-border/60">
                       <span className="font-mono text-[11px] text-gray-500">Source Verification:</span>
                       <div className="flex items-center space-x-2">
-                        {post.sources.map((src: string, sIdx: number) => (
-                          <a
-                            key={sIdx}
-                            href={typeof src === 'string' ? src : (src as any).url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-cyan-400 hover:underline font-mono text-xs flex items-center gap-1"
-                          >
-                            <span>Link</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        ))}
+                        {sourcesList.length === 0 ? (
+                          <span className="text-xs text-gray-500 italic">Source unavailable</span>
+                        ) : (
+                          sourcesList.map((src: any, sIdx: number) => {
+                            const urlStr = typeof src === 'string' ? src : src?.url;
+                            if (!urlStr) {
+                              return (
+                                <span key={sIdx} className="text-xs text-gray-500 italic">
+                                  Source unavailable
+                                </span>
+                              );
+                            }
+                            return (
+                              <a
+                                key={sIdx}
+                                href={urlStr}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-cyan-400 hover:underline font-mono text-xs flex items-center gap-1"
+                              >
+                                <span>Link</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </a>
+                            );
+                          })
+                        )}
                       </div>
                     </div>
-                  )}
-                </div>
-              ))
+                  </div>
+                );
+              })
             )}
           </div>
         </div>
