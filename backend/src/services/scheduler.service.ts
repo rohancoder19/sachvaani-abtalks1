@@ -1,8 +1,10 @@
 import { AgentModel } from '../models/agent.model';
+import { PostModel } from '../models/post.model';
 import { SchedulerModel } from '../models/scheduler.model';
 import { LogModel } from '../models/log.model';
 import { runDirectAutonomousCycle } from '../controllers/agent.controller';
 import { logger } from '../config/logger';
+
 
 class AutonomousSchedulerService {
   private activeIntervals: Map<string, NodeJS.Timeout> = new Map();
@@ -144,11 +146,25 @@ class AutonomousSchedulerService {
 
       for (const agent of activeAgents) {
         this.startScheduler(agent.agentId, 30, ioInstance);
+
+        // Seed initial post immediately on startup if agent has 0 published posts
+        PostModel.countDocuments({
+          $or: [{ agentId: agent.agentId }, { personaId: agent.agentId }]
+        }).then((count: number) => {
+          if (count === 0) {
+            logger.info(`🌱 Agent [${agent.agentId}] has 0 posts. Seeding initial autonomous post on startup...`);
+            this.executeCycle(agent.agentId, ioInstance).catch((err: any) => {
+              logger.error(`Error seeding initial post for Agent [${agent.agentId}]:`, err);
+            });
+          }
+        }).catch((err: any) => logger.error('Error checking post count on startup:', err));
       }
+
     } catch (error: any) {
       logger.error('Failed to initialize autonomous schedulers on startup:', error);
     }
   }
+
 
   stopScheduler(agentId: string): void {
     const timer = this.activeIntervals.get(agentId);
