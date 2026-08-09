@@ -15,7 +15,7 @@ export interface IMemory extends Document {
 const MemorySchema: Schema = new Schema(
   {
     agentId: { type: String, required: true, index: true },
-    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
+    personaId: { type: Schema.Types.Mixed, ref: 'Persona', index: true },
     postId: { type: Schema.Types.ObjectId, ref: 'Post' },
     topicId: { type: Schema.Types.ObjectId, ref: 'Topic' },
     summary: { type: String, required: true },

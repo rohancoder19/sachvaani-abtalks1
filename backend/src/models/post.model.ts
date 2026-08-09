@@ -21,7 +21,7 @@ export interface IPost extends Document {
 const PostSchema: Schema = new Schema(
   {
     agentId: { type: String, required: true, index: true },
-    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
+    personaId: { type: Schema.Types.Mixed, ref: 'Persona', index: true },
     topicId: { type: Schema.Types.ObjectId, ref: 'Topic' },
     topicTitle: { type: String },
     text: { type: String, required: true },

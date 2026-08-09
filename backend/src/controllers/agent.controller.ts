@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import { Request, Response } from 'express';
 import { AgentModel } from '../models/agent.model';
 import { PostModel } from '../models/post.model';
@@ -6,6 +7,7 @@ import { MemoryModel } from '../models/memory.model';
 import { aiClientService } from '../services/aiClient.service';
 import { schedulerService } from '../services/scheduler.service';
 import { logger } from '../config/logger';
+
 
 /**
  * Runs a single autonomous discovery, evaluation, deduplication, & post generation cycle
@@ -220,14 +222,15 @@ export const getAgentFeed = async (req: Request, res: Response): Promise<void> =
     }
 
     // Find posts matching agentId (or legacy personaId for backwards compatibility)
-    const rawPosts = await PostModel.find({
-      $or: [
-        { agentId: agentId },
-        { personaId: agentId }
-      ]
-    })
+    const isObjectId = mongoose.Types.ObjectId.isValid(agentId);
+    const findQuery = isObjectId
+      ? { $or: [{ agentId }, { personaId: agentId }] }
+      : { agentId };
+
+    const rawPosts = await PostModel.find(findQuery)
       .sort({ createdAt: -1 })
       .lean();
+
 
     // Format posts strictly according to Hackathon Feed Endpoint Spec
     const formattedPosts = rawPosts.map((p: any) => ({

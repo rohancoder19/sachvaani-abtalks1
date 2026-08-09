@@ -8,9 +8,10 @@ export const getPosts = async (req: Request, res: Response): Promise<void> => {
     res.setHeader('Expires', '0');
 
     const posts = await PostModel.find()
-      .populate('personaId', 'name domain')
       .populate('topicId', 'title source url score')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
+      .lean();
+
 
     res.status(200).json({ success: true, data: posts });
   } catch (error: any) {

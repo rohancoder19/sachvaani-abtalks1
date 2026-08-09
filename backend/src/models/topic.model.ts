@@ -29,7 +29,7 @@ export interface ITopic extends Document {
 const TopicSchema: Schema = new Schema(
   {
     agentId: { type: String, required: true, index: true },
-    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
+    personaId: { type: Schema.Types.Mixed, ref: 'Persona', index: true },
     title: { type: String, required: true },
     summary: { type: String, required: true },
     source: { type: String, required: true },
