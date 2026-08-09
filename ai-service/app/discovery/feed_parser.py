@@ -90,3 +90,7 @@ def fetch_live_topics() -> List[Dict[str, Any]]:
         ]
 
     return topics
+
+class TopicDiscoveryService:
+    def fetch_live_topics(self) -> List[Dict[str, Any]]:
+        return fetch_live_topics()
