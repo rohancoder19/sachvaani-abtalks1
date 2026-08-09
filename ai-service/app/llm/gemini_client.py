@@ -64,31 +64,20 @@ class GeminiLLMClient:
                 cleaned_json = cleaned_json.strip()
 
                 parsed = json.loads(cleaned_json)
-                return {
-                    "text": parsed.get("text", raw_text),
-                    "rationale": parsed.get("rationale", f"Selected because {topic.get('title')} represents a meaningful technical milestone. It is relevant now as developer adoption accelerates, and was chosen over competing candidates due to its superior technical depth.")
-                }
+                text = parsed.get("text")
+                rationale = parsed.get("rationale")
+                if text and rationale:
+                    return {
+                        "text": text,
+                        "rationale": rationale
+                    }
+                else:
+                    raise ValueError("Gemini response missing 'text' or 'rationale' keys")
+            else:
+                raise RuntimeError(f"Gemini API returned HTTP status {res.status_code}: {res.text}")
         except Exception as e:
-            print(f"Gemini API Call fallback triggered: {e}")
+            print(f"Gemini API generation error: {e}")
+            raise RuntimeError(f"Gemini API failed to generate valid post: {e}")
 
-        # Fallback structured post & 3-part rationale
-        fallback_rationale = (
-            f"Selected because {topic['title']} introduces a concrete architectural advancement in AI systems rather than incremental product news. "
-            f"The topic is especially relevant now because production adoption of autonomous agentic workflows is accelerating rapidly. "
-            f"It was chosen over other discovered candidates because it achieved a superior editorial score of {topic.get('score', {}).get('overall', 8.8)}/10 on technical depth, credibility, and developer utility."
-        )
-
-        fallback_text = (
-            f"**{topic['title']}**\n\n"
-            f"What happened:\n{topic['summary']}\n\n"
-            f"Why it matters:\nThis release marks a meaningful shift in how developers can deploy resilient, self-correcting AI agent infrastructure.\n\n"
-            f"My take:\nDon't get distracted by noisy announcements—focus on underlying architectural breakthroughs like vector memory retention and real-time reasoning.\n\n"
-            f"— {p_name} ({p_domain})"
-        )
-
-        return {
-            "text": fallback_text,
-            "rationale": fallback_rationale
-        }
 
 gemini_client = GeminiLLMClient()

@@ -12,7 +12,8 @@ export interface ITopicScore {
 }
 
 export interface ITopic extends Document {
-  personaId: mongoose.Types.ObjectId;
+  agentId: string;
+  personaId?: mongoose.Types.ObjectId;
   title: string;
   summary: string;
   source: string;
@@ -27,7 +28,8 @@ export interface ITopic extends Document {
 
 const TopicSchema: Schema = new Schema(
   {
-    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', required: true },
+    agentId: { type: String, required: true, index: true },
+    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
     title: { type: String, required: true },
     summary: { type: String, required: true },
     source: { type: String, required: true },
@@ -54,4 +56,7 @@ const TopicSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+TopicSchema.index({ agentId: 1, urlHash: 1 }, { unique: true });
+
 export const TopicModel = mongoose.model<ITopic>('Topic', TopicSchema);
+

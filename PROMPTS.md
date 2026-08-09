@@ -65,6 +65,26 @@ This document records the prompt history, AI engineering interactions, problem s
 
 ---
 
+### Prompt 9: Master Implementation & Full Evaluator Autonomy Alignment
+- **User Prompt**: Master Implementation Prompt for ABTalks Autonomous AI Creator Hackathon.
+- **Problem Statement**:
+  1. Competing BullMQ + setInterval schedulers causing duplicate execution.
+  2. Fake news fallbacks present in `aiClient.service.ts`, `graph_builder.py`, and `feed_parser.py`.
+  3. Persona identity hardcoded to `ada-ai-security` rather than dynamically supporting any persona passed to `POST /api/agent/init`.
+  4. Memory deduplication missing exact URL and title fingerprint matching.
+- **AI Engineering Resolution**:
+  - **Architecture Audit**: Consolidated execution into a single, authoritative Node.js persistent scheduler (`schedulerService`) backed by MongoDB, with concurrency locks (`runningLocks`) to prevent parallel cycle runs. Disabled BullMQ duplicate worker.
+  - **Autonomous Scheduler Prompt**: Implemented 30-minute periodic cycle interval (`30 * 60 * 1000`) with MongoDB state tracking (`lastRunAt`, `nextRunAt`, `lastRunStatus`, `consecutiveFailures`). Boot loader (`initOnStartup`) restores active agents safely on backend restart.
+  - **Live Discovery Prompt**: Expanded RSS feed parser in Python (`feed_parser.py`) to crawl live sources (Google AI, OpenAI, Anthropic, DeepMind, TechCrunch AI, VentureBeat, Ars Technica, MIT Tech Review, The Verge). Removed all fake mock news fallbacks when RSS yields zero articles.
+  - **Editorial Judgment Prompt**: Refined 7-dimensional scoring matrix (`scoring_matrix.py`) assessing Novelty (20%), Technical Depth (20%), Importance (20%), Timeliness (15%), Credibility (10%), Developer Value (10%), Audience Interest (5%) against threshold >= 7.0. Stored rejected candidates with explicit reasons.
+  - **Persona Consistency Prompt**: Refactored `initAgentTask` and `gemini_client.py` to dynamically construct system prompts and post narratives based on ANY valid persona name & domain passed in `POST /api/agent/init`.
+  - **Memory Prompt**: Integrated exact URL matching, normalized title fingerprinting, and 1536-d vector cosine similarity (`> 0.82`) in `memory_manager.py` to reject near-duplicate topics before synthesis.
+  - **API Compliance Prompt**: Strictly formatted `POST /api/agent/init` (validates `persona.name`/`domain`, returns `{ "agentId": "..." }` HTTP 200 immediately, triggers first cycle asynchronously) and `GET /api/agent/feed?agentId=...` (returns `{ "posts": [...] }` sorted newest first with ISO-8601 UTC timestamps, 3-question rationale, and validated source links).
+  - **Deployment / Reliability Prompt**: Audited `render.yaml` and `.env.example` to ensure zero dependency on Redis. Added graceful error handling so temporary API failures do not kill the scheduler or publish fabricated posts.
+  - **Testing Prompt**: Created `evaluator_contract.test.ts` to automatically verify API responses, input validation, post schema, and persistent state.
+
+---
+
 ## AI Architecture Summary
 
 ```
@@ -89,3 +109,4 @@ This document records the prompt history, AI engineering interactions, problem s
                        │ Vector Memory)   │  │   Gemini 1.5 Synthesis)  │
                        └──────────────────┘  └──────────────────────────┘
 ```
+

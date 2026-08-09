@@ -12,13 +12,15 @@
 
 ## What is ABTalks?
 
-**ABTalks** is an autonomous AI technology persona and self-directing content engine that operates continuously without human prompts.
+**ABTalks** is an autonomous AI technology persona and self-directing content engine that operates continuously for 48+ hours without human prompts or manual intervention.
+
+> **Note on Feed Publishing**: Simulated feed publishing (`GET /api/agent/feed`) is used for the hackathon evaluator contract. Direct social media API posting (e.g. LinkedIn/Twitter APIs) is intentionally out of scope.
 
 ### Problem
 Traditional AI content generation tools wait passively for human prompts or manual user interactions to trigger generation cycles.
 
 ### Solution
-ABTalks independently discovers live AI and tech news, scores candidate quality using a 7-dimensional editorial matrix, filters out duplicate topics using long-term vector memory in MongoDB, generates persona-driven post narratives with Google Gemini, and publishes them automatically over time.
+ABTalks independently discovers live AI and tech news from official blogs and reputable research sources, scores candidate quality using a 7-dimensional editorial matrix, filters out duplicate topics using long-term vector memory and title fingerprinting in MongoDB, generates persona-driven post narratives with Google Gemini, and publishes them automatically over time.
 
 ---
 
@@ -27,25 +29,25 @@ ABTalks independently discovers live AI and tech news, scores candidate quality 
 ```text
 INITIALIZE (POST /api/agent/init)
    ↓
-Create Agent / Store Persona
+Create Agent / Store Persona in MongoDB
    ↓
-Start Autonomous Worker (15 Min Interval)
+Start Persistent Background Scheduler (30 Min Interval)
    ↓
-Discover Live Topics (Multi-Source RSS)
+Discover Live Topics (Multi-Source RSS: Google AI, DeepMind, TechCrunch, MIT, etc.)
    ↓
 7-Metric Editorial Evaluation (Score ≥ 7.0)
    ↓
-Vector Memory Deduplication Check (Cosine > 0.82)
+Memory Deduplication Check (URL, Title Fingerprint, Cosine Similarity > 0.82)
    ↓
 Select Best Topic Candidate
    ↓
 Generate Post & 3-Part Rationale (Google Gemini)
    ↓
-Store Post & Vector Memory Entry
+Store Post & Vector Memory Entry in MongoDB
    ↓
 Publish Automatically to Feed (GET /api/agent/feed)
    ↓
-Repeat Autonomously (48+ Hours)
+Repeat Autonomously Every 30 Minutes (48+ Hours)
 ```
 
 ---
@@ -79,10 +81,11 @@ Content-Type: application/json
 ```
 
 *Endpoint Behavior*:
+- Validates `persona.name` and `persona.domain`.
 - Creates/upserts the agent persona in MongoDB Atlas.
-- Activates the persistent background scheduler (Node.js interval manager + BullMQ).
+- Activates the persistent background scheduler (Node.js interval manager backed by MongoDB state).
 - Triggers an initial autonomous discovery & publishing cycle asynchronously in the background.
-- Returns immediately with `agentId` without causing HTTP timeout.
+- Returns immediately with `agentId` without causing HTTP timeout or blocking on AI generation.
 
 ---
 
@@ -113,6 +116,7 @@ GET /api/agent/feed?agentId=ada-ai-security
 - `posts` is a top-level array ordered newest first (`createdAt` descending).
 - `createdAt` is valid ISO-8601 UTC string format.
 - Every post includes a 3-part rationale (Why selected, Why relevant now, Why chosen over candidates).
+- Every post includes validated real source URLs (`sources: [...]`).
 - Returns `{"posts": []}` when no posts exist yet.
 - Requires `agentId` query parameter.
 
@@ -120,8 +124,7 @@ GET /api/agent/feed?agentId=ada-ai-security
 
 ## 🤖 Persona & Editorial Engine
 
-- **Default Persona**: **Ada**
-- **Domain**: **AI Systems & Technology Intelligence / AI Security**
+- **Dynamic Personas**: Fully supports any persona supplied by the evaluator (e.g. Ada / AI Security, Rhea / Machine Learning Engineering).
 - **Voice**: Technically curious, skeptical of hype, evidence-driven, developer-focused, analytical, concise.
 - **Philosophy**: *"Don't amplify what is merely loud. Explain what is actually changing."*
 
@@ -136,8 +139,8 @@ GET /api/agent/feed?agentId=ada-ai-security
 
 *Quality Threshold*: Topics must score **≥ 7.0 / 10.0** to be approved. Low-quality topics are rejected with explicit stored reasons.
 
-### 🧠 Vector Memory Deduplication
-Candidate topics are converted to 1536-dimensional embeddings and compared against all previously published posts and memory logs in MongoDB Atlas. If cosine similarity exceeds **0.82** or title matches, candidate is rejected as a duplicate.
+### 🧠 Durable Vector Memory & Deduplication
+Candidate topics are compared against all previously published posts and memory logs in MongoDB Atlas using exact URL matching, normalized title fingerprinting, and 1536-d vector cosine similarity. If similarity exceeds **0.82** or title matches, candidate is rejected as a duplicate.
 
 ---
 
@@ -155,7 +158,7 @@ ABTalks/
 │   ├── src/
 │   │   ├── controllers/  # initAgentTask & getAgentFeed implementation
 │   │   ├── models/       # Mongoose schemas (Agent, Post, Topic, Memory, Log)
-│   │   ├── services/     # Autonomous Scheduler Service & Python AI Client
+│   │   ├── services/     # Persistent Autonomous Scheduler & Python AI Client
 │   │   └── server.ts     # Express server & socket bootloader
 │
 └── ai-service/           # Python FastAPI Multi-Agent Engine
@@ -206,10 +209,10 @@ npm run dev
 
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/abtalks?retryWrites=true&w=majority
-REDIS_URL=redis://localhost:6379
 GEMINI_API_KEY=your_gemini_api_key_here
 FASTAPI_AI_SERVICE_URL=http://localhost:8000
 PORT=5000
 NODE_ENV=production
 CORS_ORIGIN=http://localhost:5173
 ```
+

@@ -1,7 +1,8 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IMemory extends Document {
-  personaId: mongoose.Types.ObjectId;
+  agentId: string;
+  personaId?: mongoose.Types.ObjectId;
   postId?: mongoose.Types.ObjectId;
   topicId?: mongoose.Types.ObjectId;
   summary: string;
@@ -13,7 +14,8 @@ export interface IMemory extends Document {
 
 const MemorySchema: Schema = new Schema(
   {
-    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', required: true, index: true },
+    agentId: { type: String, required: true, index: true },
+    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
     postId: { type: Schema.Types.ObjectId, ref: 'Post' },
     topicId: { type: Schema.Types.ObjectId, ref: 'Topic' },
     summary: { type: String, required: true },
@@ -24,3 +26,4 @@ const MemorySchema: Schema = new Schema(
 );
 
 export const MemoryModel = mongoose.model<IMemory>('Memory', MemorySchema);
+

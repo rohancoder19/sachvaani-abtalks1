@@ -6,11 +6,12 @@ import { logger } from '../config/logger';
 
 class AutonomousSchedulerService {
   private activeIntervals: Map<string, NodeJS.Timeout> = new Map();
+  private runningLocks: Set<string> = new Set();
 
   /**
    * Starts a recurring background worker for an agent using Node.js setInterval
    */
-  startScheduler(agentId: string, intervalMinutes: number = 15, ioInstance?: any): void {
+  startScheduler(agentId: string, intervalMinutes: number = 30, ioInstance?: any): void {
     if (this.activeIntervals.has(agentId)) {
       logger.info(`⏰ Autonomous scheduler already running for Agent: ${agentId}`);
       return;
@@ -37,6 +38,13 @@ class AutonomousSchedulerService {
    * Executes a single autonomous cycle safely without throwing uncaught exceptions
    */
   async executeCycle(agentId: string, ioInstance?: any): Promise<any> {
+    if (this.runningLocks.has(agentId)) {
+      logger.warn(`⚠️ [AUTONOMOUS CYCLE SKIPPED] Cycle already running for Agent [${agentId}]`);
+      return null;
+    }
+
+    this.runningLocks.add(agentId);
+
     try {
       const agent = await AgentModel.findOne({ agentId });
       const personaContext = {
@@ -53,13 +61,17 @@ class AutonomousSchedulerService {
 
       const cycleData = await runDirectAutonomousCycle(agentId, personaContext);
 
-      const nextRunAt = new Date(Date.now() + 15 * 60 * 1000);
+      const nextRunAt = new Date(Date.now() + 30 * 60 * 1000);
+      const isSuccess = cycleData?.post ? 'success' : (cycleData?.status === 'NO_QUALIFYING_TOPIC' ? 'no_qualifying_topic' : 'failed');
+
       await AgentModel.findOneAndUpdate(
         { agentId },
         {
           lastRunAt: new Date(),
           nextRunAt,
           status: 'active',
+          lastRunStatus: isSuccess,
+          consecutiveFailures: isSuccess === 'failed' ? (agent?.consecutiveFailures || 0) + 1 : 0,
           $inc: { totalCycles: 1 }
         }
       );
@@ -74,14 +86,27 @@ class AutonomousSchedulerService {
 
       await LogModel.create({
         level: 'info',
-        message: `[AUTONOMOUS] Cycle completed successfully for Agent: ${agentId}`,
+        message: `[AUTONOMOUS] Cycle completed (${isSuccess}) for Agent: ${agentId}`,
         source: 'SCHEDULER',
-        details: { agentId, cycleData: { topic: cycleData?.topic?.title } }
+        details: { agentId, cycleData: { topic: cycleData?.topic?.title, status: isSuccess } }
       });
 
       return cycleData;
     } catch (error: any) {
       logger.error(`❌ [AUTONOMOUS CYCLE FAILED] Error for Agent [${agentId}]:`, error.message || error);
+      
+      const nextRunAt = new Date(Date.now() + 30 * 60 * 1000);
+      await AgentModel.findOneAndUpdate(
+        { agentId },
+        {
+          lastRunAt: new Date(),
+          nextRunAt,
+          lastRunStatus: 'failed',
+          lastError: error.message || String(error),
+          $inc: { consecutiveFailures: 1, totalCycles: 1 }
+        }
+      ).catch(() => {});
+
       await LogModel.create({
         level: 'error',
         message: `[AUTONOMOUS] Cycle failed for Agent: ${agentId}: ${error.message}`,
@@ -89,6 +114,8 @@ class AutonomousSchedulerService {
         details: { agentId, error: error.message }
       });
       return null;
+    } finally {
+      this.runningLocks.delete(agentId);
     }
   }
 
@@ -108,14 +135,15 @@ class AutonomousSchedulerService {
             domain: 'AI Security',
             voiceStyle: 'Analytical, evidence-driven, developer-focused'
           },
-          status: 'active'
+          status: 'active',
+          nextRunAt: new Date(Date.now() + 30 * 60 * 1000)
         });
         activeAgents = [defaultAgent];
         logger.info(`✨ Auto-initialized default persona Agent: ${defaultAgent.agentId} (Ada - AI Security)`);
       }
 
       for (const agent of activeAgents) {
-        this.startScheduler(agent.agentId, 15, ioInstance);
+        this.startScheduler(agent.agentId, 30, ioInstance);
       }
     } catch (error: any) {
       logger.error('Failed to initialize autonomous schedulers on startup:', error);
@@ -131,5 +159,6 @@ class AutonomousSchedulerService {
     }
   }
 }
+
 
 export const schedulerService = new AutonomousSchedulerService();

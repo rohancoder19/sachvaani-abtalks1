@@ -11,7 +11,9 @@ export const LiveFeed: React.FC = () => {
   const fetchFeed = useCallback(async () => {
     try {
       setIsRefreshing(true);
-      const res = await agentApi.getFeed('ada-ai-security');
+      const searchParams = new URLSearchParams(window.location.search);
+      const targetAgentId = searchParams.get('agentId') || 'ada-ai-security';
+      const res = await agentApi.getFeed(targetAgentId);
       if (res.posts) {
         setPosts(res.posts || []);
       } else if (res.success && res.data) {
@@ -23,6 +25,7 @@ export const LiveFeed: React.FC = () => {
       setIsRefreshing(false);
     }
   }, []);
+
 
   useEffect(() => {
     fetchFeed();

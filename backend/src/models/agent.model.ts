@@ -10,6 +10,9 @@ export interface IAgent extends Document {
   status: 'active' | 'paused';
   lastRunAt?: Date;
   nextRunAt?: Date;
+  lastRunStatus?: 'success' | 'failed' | 'no_qualifying_topic';
+  consecutiveFailures: number;
+  lastError?: string;
   totalCycles: number;
   initializedAt: Date;
   createdAt: Date;
@@ -27,6 +30,9 @@ const AgentSchema: Schema = new Schema(
     status: { type: String, enum: ['active', 'paused'], default: 'active' },
     lastRunAt: { type: Date },
     nextRunAt: { type: Date },
+    lastRunStatus: { type: String, enum: ['success', 'failed', 'no_qualifying_topic'], default: 'success' },
+    consecutiveFailures: { type: Number, default: 0 },
+    lastError: { type: String },
     totalCycles: { type: Number, default: 0 },
     initializedAt: { type: Date, default: Date.now }
   },
@@ -34,3 +40,4 @@ const AgentSchema: Schema = new Schema(
 );
 
 export const AgentModel = mongoose.model<IAgent>('Agent', AgentSchema);
+

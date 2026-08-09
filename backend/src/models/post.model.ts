@@ -1,12 +1,13 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPost extends Document {
-  agentId?: string;
+  agentId: string;
   personaId?: mongoose.Types.ObjectId;
   topicId?: mongoose.Types.ObjectId;
+  topicTitle?: string;
   text: string;
   rationale: string;
-  sources: Array<{ title: string; url: string }>;
+  sources: Array<{ title?: string; url: string }>;
   tags: string[];
   metrics: {
     views: number;
@@ -19,9 +20,10 @@ export interface IPost extends Document {
 
 const PostSchema: Schema = new Schema(
   {
-    agentId: { type: String, index: true },
+    agentId: { type: String, required: true, index: true },
     personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
     topicId: { type: Schema.Types.ObjectId, ref: 'Topic' },
+    topicTitle: { type: String },
     text: { type: String, required: true },
     rationale: { type: String, required: true },
     sources: [
@@ -40,4 +42,7 @@ const PostSchema: Schema = new Schema(
   { timestamps: true }
 );
 
+PostSchema.index({ agentId: 1, createdAt: -1 });
+
 export const PostModel = mongoose.model<IPost>('Post', PostSchema);
+
