@@ -20,6 +20,9 @@ export const SocketProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
   useEffect(() => {
     const getSocketUrl = () => {
+      if (import.meta.env.VITE_SOCKET_URL) {
+        return import.meta.env.VITE_SOCKET_URL;
+      }
       if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
         return 'https://abtalks-backend.onrender.com';
       }

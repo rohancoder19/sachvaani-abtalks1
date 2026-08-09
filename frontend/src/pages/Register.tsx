@@ -35,31 +35,31 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090D16] flex items-center justify-center p-4 relative overflow-hidden">
+    <div className="min-h-screen bg-[#090D16] flex items-center justify-center p-4 sm:p-6 relative overflow-hidden w-full max-w-full">
       {/* Background Ambient Glows */}
-      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-indigo-600/15 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
+      <div className="w-full max-w-md space-y-6 relative z-10 min-w-0">
         {/* Logo & Title */}
         <div className="text-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 p-0.5 shadow-xl shadow-indigo-500/20 mx-auto">
             <div className="w-full h-full bg-[#090D16] rounded-[14px] flex items-center justify-center">
-              <Bot className="w-7 h-7 text-cyan-400 animate-pulse" />
+              <Bot className="w-6 h-6 sm:w-7 sm:h-7 text-cyan-400 animate-pulse" />
             </div>
           </div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-extrabold tracking-tight text-white flex items-center justify-center gap-2">
             Create AI Account
           </h1>
           <p className="text-xs text-gray-400">Register to manage your autonomous AI creators</p>
         </div>
 
         {/* Register Form Card */}
-        <div className="p-8 rounded-3xl bg-surface/80 backdrop-blur-xl border border-border/80 shadow-2xl space-y-6">
+        <div className="p-5 sm:p-8 rounded-2xl sm:rounded-3xl bg-surface/80 backdrop-blur-xl border border-border/80 shadow-2xl space-y-5 sm:space-y-6 w-full">
           {error && (
             <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center space-x-2">
               <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{error}</span>
+              <span className="break-words-anywhere">{error}</span>
             </div>
           )}
 
@@ -74,7 +74,7 @@ export const Register: React.FC = () => {
                   placeholder="Rohan Sharma"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600 touch-target"
                 />
               </div>
             </div>
@@ -89,7 +89,7 @@ export const Register: React.FC = () => {
                   placeholder="rohan@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600 touch-target"
                 />
               </div>
             </div>
@@ -104,7 +104,7 @@ export const Register: React.FC = () => {
                   placeholder="••••••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 transition-all placeholder:text-gray-600 touch-target"
                 />
               </div>
             </div>
@@ -112,7 +112,7 @@ export const Register: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 mt-2"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-bold text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-2 disabled:opacity-50 mt-2 touch-target"
             >
               <UserPlus className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
               <span>{isLoading ? 'Creating Account...' : 'Register Account'}</span>
@@ -130,3 +130,4 @@ export const Register: React.FC = () => {
     </div>
   );
 };
+

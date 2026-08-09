@@ -1,9 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SocketProvider } from './context/SocketContext';
 import { Navbar } from './components/common/Navbar';
 import { Sidebar } from './components/common/Sidebar';
+import { MobileNav } from './components/common/MobileNav';
 import { useAuthStore } from './store/useAuthStore';
 
 import { Login } from './pages/Login';
@@ -45,12 +46,20 @@ const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) 
 };
 
 const AppLayout: React.FC = () => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   return (
-    <div className="min-h-screen bg-[#090D16] text-gray-100 flex flex-col font-sans">
-      <Navbar />
-      <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto">
+    <div className="min-h-screen bg-[#090D16] text-gray-100 flex flex-col font-sans w-full max-w-full overflow-x-hidden">
+      <Navbar
+        isMobileMenuOpen={isMobileMenuOpen}
+        onToggleMobileMenu={() => setIsMobileMenuOpen((prev) => !prev)}
+      />
+      <div className="flex flex-1 w-full min-w-0">
+        <Sidebar
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+        />
+        <main className="flex-1 p-4 sm:p-6 lg:p-8 pb-20 lg:pb-8 w-full min-w-0 max-w-[1440px] mx-auto overflow-x-hidden">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/evaluator" element={<EvaluatorSimulation />} />
@@ -66,6 +75,7 @@ const AppLayout: React.FC = () => {
           </Routes>
         </main>
       </div>
+      <MobileNav onOpenMenu={() => setIsMobileMenuOpen(true)} />
     </div>
   );
 };

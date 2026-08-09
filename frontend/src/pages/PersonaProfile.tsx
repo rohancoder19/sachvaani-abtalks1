@@ -51,31 +51,31 @@ export const PersonaProfile: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div className="flex items-center space-x-3">
-        <UserCheck className="w-6 h-6 text-indigo-400" />
-        <div>
-          <h2 className="text-xl font-bold text-white">Persona Profile Manager</h2>
-          <p className="text-xs text-gray-400">Configure target voice, domain specialization, and formatting directives for LLM post generation.</p>
+    <div className="space-y-6 max-w-4xl mx-auto w-full min-w-0 pb-12">
+      <div className="flex items-center space-x-3 min-w-0">
+        <UserCheck className="w-6 h-6 text-indigo-400 shrink-0" />
+        <div className="min-w-0">
+          <h2 className="text-lg sm:text-xl font-bold text-white">Persona Profile Manager</h2>
+          <p className="text-xs text-gray-400 leading-relaxed">Configure target voice, domain specialization, and formatting directives for LLM post generation.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSave} className="p-6 rounded-2xl bg-surface border border-border/80 space-y-5">
+      <form onSubmit={handleSave} className="p-4 sm:p-6 rounded-2xl bg-surface border border-border/80 space-y-5 w-full">
         {successMsg && (
           <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center gap-2">
-            <Sparkles className="w-4 h-4" />
-            <span>{successMsg}</span>
+            <Sparkles className="w-4 h-4 shrink-0" />
+            <span className="break-words-anywhere">{successMsg}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Persona Name</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 touch-target"
             />
           </div>
           <div>
@@ -84,19 +84,19 @@ export const PersonaProfile: React.FC = () => {
               type="text"
               value={formData.domain}
               onChange={(e) => setFormData({ ...formData, domain: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 touch-target"
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
           <div>
             <label className="block text-xs font-semibold text-gray-300 uppercase tracking-wider mb-2">Voice Style</label>
             <input
               type="text"
               value={formData.voiceStyle}
               onChange={(e) => setFormData({ ...formData, voiceStyle: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 touch-target"
             />
           </div>
           <div>
@@ -105,7 +105,7 @@ export const PersonaProfile: React.FC = () => {
               type="text"
               value={formData.targetAudience}
               onChange={(e) => setFormData({ ...formData, targetAudience: e.target.value })}
-              className="w-full px-4 py-2.5 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500"
+              className="w-full px-4 py-3 rounded-xl bg-background border border-border/80 text-sm text-white focus:outline-none focus:border-indigo-500 touch-target"
             />
           </div>
         </div>
@@ -113,7 +113,7 @@ export const PersonaProfile: React.FC = () => {
         <button
           type="submit"
           disabled={isSaving}
-          className="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-500 transition-all flex items-center space-x-2 disabled:opacity-50"
+          className="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 text-white font-semibold text-sm hover:bg-indigo-500 transition-all flex items-center justify-center space-x-2 disabled:opacity-50 touch-target"
         >
           <Save className="w-4 h-4" />
           <span>{isSaving ? 'Saving...' : 'Save Persona Settings'}</span>
@@ -122,3 +122,4 @@ export const PersonaProfile: React.FC = () => {
     </div>
   );
 };
+

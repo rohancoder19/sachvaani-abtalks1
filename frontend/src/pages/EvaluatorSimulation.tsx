@@ -96,33 +96,33 @@ export const EvaluatorSimulation: React.FC = () => {
   };
 
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-6 sm:space-y-8 pb-12 w-full min-w-0">
       {/* Header */}
       <div>
         <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-bold uppercase tracking-widest mb-1">
-          <Sparkles className="w-4 h-4 animate-pulse text-indigo-400" />
+          <Sparkles className="w-4 h-4 animate-pulse text-indigo-400 shrink-0" />
           <span>Hackathon Evaluator Suite</span>
         </div>
-        <h2 className="text-2xl font-extrabold text-white flex items-center gap-3 tracking-tight">
-          <Terminal className="w-7 h-7 text-indigo-400" />
-          Evaluator API Simulation Panel
+        <h2 className="text-xl sm:text-2xl font-extrabold text-white flex items-center gap-2.5 tracking-tight">
+          <Terminal className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-400 shrink-0" />
+          <span>Evaluator API Simulation Panel</span>
         </h2>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-xs sm:text-sm text-gray-400 mt-1">
           Simulate official hackathon evaluator requests against <code className="text-indigo-300 font-mono font-semibold">POST /api/v1/agent/init</code> and <code className="text-indigo-300 font-mono font-semibold">GET /api/v1/agent/feed</code>.
         </p>
       </div>
 
       {/* Info Notice */}
-      <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-500/30 flex items-start gap-3 shadow-xl">
+      <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-950/60 via-slate-900 to-slate-950 border border-indigo-500/30 flex items-start gap-3 shadow-xl w-full">
         <Info className="w-5 h-5 text-indigo-400 shrink-0 mt-0.5" />
-        <div className="text-xs text-gray-300 space-y-1 leading-relaxed">
-          <p className="font-bold text-indigo-300 flex items-center gap-2">
+        <div className="text-xs text-gray-300 space-y-1 leading-relaxed min-w-0">
+          <div className="font-bold text-indigo-300 flex flex-wrap items-center gap-2">
             <span>Hackathon Specification Compliance:</span>
             <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold uppercase">
               Verified 100%
             </span>
-          </p>
-          <p>
+          </div>
+          <p className="break-words-anywhere">
             Initialization starts the background autonomous worker. <code className="text-cyan-300 font-mono font-semibold">POST /api/v1/agent/init</code> returns immediately with an <code className="text-cyan-300 font-mono font-semibold">agentId</code> slug without HTTP timeout. The backend worker continuously executes discovery, 7-metric evaluation, memory deduplication, and Gemini post generation over time.
           </p>
         </div>
@@ -130,25 +130,25 @@ export const EvaluatorSimulation: React.FC = () => {
 
       {/* Live Socket Update Banner */}
       {lastEvent && (
-        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex items-center justify-between shadow-lg">
-          <div className="flex items-center space-x-2">
-            <Zap className="w-4 h-4 text-emerald-400 animate-bounce" />
-            <span>Real-time Socket.IO Event Received: Cycle completed for Agent [{lastEvent.agentId || 'ada-ai-security'}]</span>
+        <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2 shadow-lg w-full">
+          <div className="flex items-center space-x-2 min-w-0">
+            <Zap className="w-4 h-4 text-emerald-400 animate-bounce shrink-0" />
+            <span className="truncate">Real-time Socket.IO Event: Cycle completed for Agent [{lastEvent.agentId || 'ada-ai-security'}]</span>
           </div>
-          <span className="font-mono text-[11px] text-emerald-500">{new Date(lastEvent.timestamp || Date.now()).toLocaleTimeString()}</span>
+          <span className="font-mono text-[11px] text-emerald-500 shrink-0">{new Date(lastEvent.timestamp || Date.now()).toLocaleTimeString()}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 w-full min-w-0">
         {/* Endpoint 1: Init */}
-        <div className="p-6 rounded-3xl bg-surface border border-border/80 space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/60 pb-4">
-            <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-mono font-extrabold border border-emerald-500/30">
+        <div className="p-4 sm:p-6 rounded-3xl bg-surface border border-border/80 space-y-5 sm:space-y-6 shadow-2xl relative overflow-hidden w-full min-w-0">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4 gap-2">
+            <div className="flex items-center space-x-2 min-w-0">
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-400 text-xs font-mono font-extrabold border border-emerald-500/30 truncate">
                 POST /api/v1/agent/init
               </span>
             </div>
-            <span className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider">Evaluator Init Endpoint</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider shrink-0">Init Endpoint</span>
           </div>
 
           <div className="space-y-4">
@@ -158,7 +158,7 @@ export const EvaluatorSimulation: React.FC = () => {
                 type="text"
                 value={initName}
                 onChange={(e) => setInitName(e.target.value)}
-                className="w-full bg-[#090D16] border border-border/80 rounded-xl px-4 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-indigo-500 transition-all shadow-inner"
+                className="w-full bg-[#090D16] border border-border/80 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-indigo-500 transition-all shadow-inner touch-target"
               />
             </div>
             <div>
@@ -167,14 +167,14 @@ export const EvaluatorSimulation: React.FC = () => {
                 type="text"
                 value={initDomain}
                 onChange={(e) => setInitDomain(e.target.value)}
-                className="w-full bg-[#090D16] border border-border/80 rounded-xl px-4 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-indigo-500 transition-all shadow-inner"
+                className="w-full bg-[#090D16] border border-border/80 rounded-xl px-4 py-3 text-sm text-white font-medium focus:outline-none focus:border-indigo-500 transition-all shadow-inner touch-target"
               />
             </div>
 
             <button
               onClick={handleInit}
               disabled={initLoading}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/25 disabled:opacity-50"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-500 hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-indigo-600/25 disabled:opacity-50 touch-target"
             >
               {initLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4 fill-white" />}
               <span>Send POST /api/v1/agent/init</span>
@@ -182,26 +182,26 @@ export const EvaluatorSimulation: React.FC = () => {
           </div>
 
           {/* cURL Display */}
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2 pt-2 min-w-0">
             <div className="flex items-center justify-between text-xs text-gray-400 font-mono">
               <span className="font-bold text-gray-300">cURL Request</span>
               <button
                 onClick={() => copyToClipboard(initCurl, setCopiedInit)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-gray-300 hover:text-white transition-colors touch-target"
               >
                 {copiedInit ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedInit ? 'Copied' : 'Copy cURL'}</span>
               </button>
             </div>
-            <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-cyan-300 overflow-x-auto whitespace-pre-wrap leading-relaxed shadow-inner">
+            <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-cyan-300 overflow-x-auto whitespace-pre-wrap leading-relaxed shadow-inner break-words-anywhere max-w-full">
               {initCurl}
             </pre>
           </div>
 
           {/* Response Display */}
           {initResult && (
-            <div className="space-y-2 pt-2 border-t border-border/60">
-              <div className="flex items-center justify-between text-xs font-mono">
+            <div className="space-y-2 pt-2 border-t border-border/60 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
                 <div className="flex items-center space-x-2">
                   <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
                     200 OK
@@ -215,13 +215,13 @@ export const EvaluatorSimulation: React.FC = () => {
                 </div>
                 <button
                   onClick={() => copyToClipboard(JSON.stringify(initResult, null, 2), setCopiedInitResp)}
-                  className="flex items-center gap-1 hover:text-white text-gray-400 transition-colors"
+                  className="flex items-center gap-1 hover:text-white text-gray-400 transition-colors touch-target"
                 >
                   {copiedInitResp ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedInitResp ? 'Copied' : 'Copy Response'}</span>
                 </button>
               </div>
-              <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-56 leading-relaxed shadow-inner">
+              <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-56 leading-relaxed shadow-inner max-w-full">
                 {JSON.stringify(initResult, null, 2)}
               </pre>
             </div>
@@ -229,14 +229,14 @@ export const EvaluatorSimulation: React.FC = () => {
         </div>
 
         {/* Endpoint 2: Feed */}
-        <div className="p-6 rounded-3xl bg-surface border border-border/80 space-y-6 shadow-2xl relative overflow-hidden">
-          <div className="flex items-center justify-between border-b border-border/60 pb-4">
-            <div className="flex items-center space-x-2">
-              <span className="px-3 py-1 rounded-lg bg-sky-500/20 text-sky-400 text-xs font-mono font-extrabold border border-sky-500/30">
+        <div className="p-4 sm:p-6 rounded-3xl bg-surface border border-border/80 space-y-5 sm:space-y-6 shadow-2xl relative overflow-hidden w-full min-w-0">
+          <div className="flex items-center justify-between border-b border-border/60 pb-4 gap-2">
+            <div className="flex items-center space-x-2 min-w-0">
+              <span className="px-2.5 py-1 rounded-lg bg-sky-500/20 text-sky-400 text-xs font-mono font-extrabold border border-sky-500/30 truncate">
                 GET /api/v1/agent/feed
               </span>
             </div>
-            <span className="text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider">Evaluator Feed Endpoint</span>
+            <span className="text-[11px] sm:text-xs font-semibold text-gray-400 font-mono uppercase tracking-wider shrink-0">Feed Endpoint</span>
           </div>
 
           <div className="space-y-4">
@@ -249,14 +249,14 @@ export const EvaluatorSimulation: React.FC = () => {
                 value={feedAgentId}
                 onChange={(e) => setFeedAgentId(e.target.value)}
                 placeholder="e.g. ada-ai-security"
-                className="w-full bg-[#090D16] border border-border/80 rounded-xl px-4 py-2.5 text-sm text-white font-mono focus:outline-none focus:border-sky-500 transition-all shadow-inner"
+                className="w-full bg-[#090D16] border border-border/80 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-sky-500 transition-all shadow-inner touch-target"
               />
             </div>
 
             <button
               onClick={() => handleFetchFeed()}
               disabled={feedLoading}
-              className="w-full py-3 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-sky-600/25 disabled:opacity-50"
+              className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-600 to-cyan-500 hover:brightness-110 text-white font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-lg shadow-sky-600/25 disabled:opacity-50 touch-target"
             >
               {feedLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
               <span>Fetch Feed (GET /api/v1/agent/feed)</span>
@@ -264,26 +264,26 @@ export const EvaluatorSimulation: React.FC = () => {
           </div>
 
           {/* cURL Display */}
-          <div className="space-y-2 pt-2">
+          <div className="space-y-2 pt-2 min-w-0">
             <div className="flex items-center justify-between text-xs text-gray-400 font-mono">
               <span className="font-bold text-gray-300">cURL Request</span>
               <button
                 onClick={() => copyToClipboard(feedCurl, setCopiedFeed)}
-                className="flex items-center gap-1.5 px-2 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-gray-300 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-slate-800/80 hover:bg-slate-700 text-gray-300 hover:text-white transition-colors touch-target"
               >
                 {copiedFeed ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                 <span>{copiedFeed ? 'Copied' : 'Copy cURL'}</span>
               </button>
             </div>
-            <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-cyan-300 overflow-x-auto whitespace-pre-wrap leading-relaxed shadow-inner">
+            <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-cyan-300 overflow-x-auto whitespace-pre-wrap leading-relaxed shadow-inner break-words-anywhere max-w-full">
               {feedCurl}
             </pre>
           </div>
 
           {/* Response Display */}
           {feedResult && (
-            <div className="space-y-2 pt-2 border-t border-border/60">
-              <div className="flex items-center justify-between text-xs font-mono">
+            <div className="space-y-2 pt-2 border-t border-border/60 min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
                 <div className="flex items-center space-x-2">
                   <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/30">
                     200 OK
@@ -300,13 +300,13 @@ export const EvaluatorSimulation: React.FC = () => {
                 </div>
                 <button
                   onClick={() => copyToClipboard(JSON.stringify(feedResult, null, 2), setCopiedFeedResp)}
-                  className="flex items-center gap-1 hover:text-white text-gray-400 transition-colors"
+                  className="flex items-center gap-1 hover:text-white text-gray-400 transition-colors touch-target"
                 >
                   {copiedFeedResp ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                   <span>{copiedFeedResp ? 'Copied' : 'Copy Response'}</span>
                 </button>
               </div>
-              <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-72 leading-relaxed shadow-inner">
+              <pre className="p-3.5 rounded-xl bg-[#06080F] border border-border/50 text-[11px] font-mono text-emerald-400 overflow-x-auto max-h-72 leading-relaxed shadow-inner max-w-full">
                 {JSON.stringify(feedResult, null, 2)}
               </pre>
             </div>
@@ -316,3 +316,4 @@ export const EvaluatorSimulation: React.FC = () => {
     </div>
   );
 };
+
