@@ -13,6 +13,7 @@ app = FastAPI(
 class ExecuteAgentRequest(BaseModel):
     personaId: str
     pastMemories: Optional[list] = []
+    persona: Optional[Dict[str, Any]] = None
 
 @app.get("/health")
 def health_check():
@@ -21,10 +22,11 @@ def health_check():
 @app.post(f"{settings.API_V1_STR}/agent/execute")
 def execute_autonomous_agent(request: ExecuteAgentRequest):
     try:
+        req_persona = request.persona or {}
         persona_context = {
-            "name": "Autonomous AI Creator",
-            "domain": "Artificial Intelligence & Technology",
-            "voiceStyle": "Authoritative & Insightful"
+            "name": req_persona.get("name", "Ada"),
+            "domain": req_persona.get("domain", "AI Systems & Technology Intelligence"),
+            "voiceStyle": req_persona.get("voiceStyle", "Technically curious, skeptical of hype, evidence-driven, developer-focused, analytical, concise")
         }
         
         # Execute autonomous discovery, evaluation, deduplication, & synthesis pipeline

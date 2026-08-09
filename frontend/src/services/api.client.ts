@@ -20,8 +20,17 @@ export const agentApi = {
     const res = await apiClient.post('/agent/init', { personaId });
     return res.data;
   },
-  getFeed: async (page = 1, limit = 10) => {
-    const res = await apiClient.get(`/agent/feed?page=${page}&limit=${limit}&_t=${Date.now()}`);
+  initializeAgentWithPersona: async (persona: { name: string; domain: string }) => {
+    const res = await apiClient.post('/agent/init', { persona });
+    return res.data;
+  },
+  getFeed: async (agentId?: string, page = 1, limit = 10) => {
+    const query = agentId ? `agentId=${agentId}&` : 'agentId=ada-ai-security&';
+    const res = await apiClient.get(`/agent/feed?${query}page=${page}&limit=${limit}&_t=${Date.now()}`);
+    return res.data;
+  },
+  getAgentFeedByAgentId: async (agentId: string) => {
+    const res = await apiClient.get(`/agent/feed?agentId=${agentId}&_t=${Date.now()}`);
     return res.data;
   },
   getPersonas: async () => {

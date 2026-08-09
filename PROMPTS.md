@@ -1,6 +1,6 @@
-# AI Prompts & Conversation Log - Autonomous AI Creator (ABTalks)
+# AI Prompts & Conversation Log - ABTalks Autonomous AI Creator
 
-This document records the prompt history, AI engineering interactions, problem statements, and resolution strategies used during the development of the **Autonomous AI Creator Platform (ABTalks)**.
+This document records the prompt history, AI engineering interactions, problem statements, and resolution strategies used during the development of **ABTalks — Autonomous AI Creator & Content Engine** for the hackathon challenge.
 
 ---
 
@@ -31,8 +31,6 @@ This document records the prompt history, AI engineering interactions, problem s
 - **AI Action**: Added an interactive "Refresh Queue" button with spinning state and empty state cards in `TopicDiscovery.tsx`.
 - **Commit**: `feat(ui): add live candidate badge, refresh button, and empty state UI to TopicDiscovery`
 
----
-
 ### Prompt 6: Live Feed Page Refresh & Caching Resolution
 - **User Prompt**: `"not seeing latesr post when i refresh it"` / `"same problem latest feed not showing when i refresh it"`
 - **Problem Statement**:
@@ -40,25 +38,30 @@ This document records the prompt history, AI engineering interactions, problem s
   2. Direct cycle executions (`/agent/init`) did not emit `AUTONOMOUS_CYCLE_COMPLETED` over Socket.IO.
   3. `LiveFeed.tsx` only fetched data on component mount and did not listen to real-time socket events.
   4. Static RSS fallback topics caused repeated semantic duplicate rejections.
-
 - **AI Engineering Resolution**:
   - **Backend (`agent.controller.ts`, `post.controller.ts`)**: Added HTTP headers `Cache-Control: no-cache, no-store, must-revalidate, max-age=0`, `Pragma: no-cache`, `Expires: 0`.
   - **Socket Server (`server.ts`, `agent.controller.ts`)**: Exposed `app.set('io', io)` and emitted `AUTONOMOUS_CYCLE_COMPLETED` upon direct task execution.
   - **Frontend Client (`api.client.ts`)**: Appended dynamic timestamp cache busters (`_t=${Date.now()}`) to feed API requests.
   - **LiveFeed Component (`LiveFeed.tsx`)**: Subscribed component lifecycle to Socket.IO `lastEvent` and added a manual "Refresh Feed" button.
   - **AI Discovery Engine (`feed_parser.py`)**: Added dynamic timestamps to fallback RSS topics.
-
 - **Commit**: `fix(feed): resolve feed refresh caching, missing socket events, and enable real-time feed updates`
 
 ---
 
-### Prompt 7: Verification & Documentation Request
-- **User Prompt**: `"run and check"` / `"latest all commit github and make PROMPTS.md — the prompts and AI conversations you used while building"`
-- **AI Action**:
-  1. Executed end-to-end API testing for `/api/v1/agent/init` and `/api/v1/agent/feed`.
-  2. Executed automated browser testing via `browser_subagent` at `http://localhost:5173/feed` to confirm real-time updates and feed refreshes.
-  3. Created `PROMPTS.md` documenting the AI prompt history and architecture trajectory.
-  4. Staged and committed all changes to Git, pushing directly to GitHub main branch.
+### Prompt 8: Hackathon Autonomy Alignment & Evaluator API Refactoring
+- **User Prompt**: Refactor existing codebase to achieve 100% compliance with the ABTalks Autonomous AI Creator Hackathon Challenge. Ensure `/api/agent/init` starts an autonomous background worker and returns `{"agentId": "..."}` immediately, and `/api/agent/feed?agentId=...` returns top-level `{"posts": [...]}` with ISO-8601 UTC timestamps, 3-question rationale, and source links.
+- **Problem Statement**:
+  1. `/api/agent/init` expected a Mongo ObjectId `personaId` rather than accepting `{"persona": {"name": "Ada", "domain": "AI Security"}}`.
+  2. Background worker relied solely on BullMQ/Redis; if Redis was offline, it did not continue running periodic cycles autonomously in Node.js.
+  3. Feed response wrapped array in `{ success: true, data: [...] }` instead of top-level `{ "posts": [...] }`.
+  4. Posts lacked 3-part rationale answering why selected, why relevant now, and why chosen over candidates.
+- **AI Engineering Resolution**:
+  - **Backend (`agent.model.ts`, `agent.controller.ts`, `scheduler.service.ts`)**: Created `AgentModel`, implemented Node.js `setInterval` fallback loop manager (`schedulerService`), and auto-resumed active agents on server startup (`server.ts`).
+  - **API Contract (`agent.controller.ts`, `routes/index.ts`)**: Updated `POST /api/agent/init` to return `{ "agentId": agentId }` immediately and updated `GET /api/agent/feed` to return top-level `{ "posts": [...] }`.
+  - **AI Microservice (`feed_parser.py`, `scoring_matrix.py`, `gemini_client.py`)**: Expanded RSS sources, updated 7-metric editorial matrix (`threshold >= 7.0`), configured **Ada** persona prompt, and mandated 3-part rationale structure.
+  - **Frontend Dashboard (`Dashboard.tsx`, `App.tsx`, `EvaluatorSimulation.tsx`)**: Redesigned home view with visual pipeline (`DISCOVER → JUDGE → REMEMBER → CREATE → PUBLISH`), real-time activity stream, public access, and interactive Evaluator API Panel.
+
+- **Commit**: `feat(hackathon): 100% hackathon compliance with autonomous scheduler, evaluator API contract, and Ada persona`
 
 ---
 
@@ -67,14 +70,14 @@ This document records the prompt history, AI engineering interactions, problem s
 ```
                        ┌────────────────────────────────────────┐
                        │           React + Vite Frontend        │
-                       │     (Real-Time Socket.IO Listener)     │
+                       │     (Real-Time Socket.IO & Feed UI)    │
                        └───────────────────┬────────────────────┘
                                            │
                                  HTTP GET / POST (_t=timestamp)
                                            │
                        ┌───────────────────▼────────────────────┐
                        │        Node.js / Express Gateway       │
-                       │    (Cache-Control: no-store, max-age=0) │
+                       │   (Background Autonomous Scheduler)   │
                        └───────────┬────────────────┬───────────┘
                                    │                │
                          MongoDB   │                │ HTTP POST
@@ -82,7 +85,7 @@ This document records the prompt history, AI engineering interactions, problem s
                                    │                │
                        ┌───────────▼──────┐  ┌──────▼───────────────────┐
                        │   MongoDB Atlas  │  │   Python FastAPI AI      │
-                       │ (Posts, Topics,  │  │  (Editorial Scoring,     │
+                       │ (Agents, Posts,  │  │  (7-Metric Scoring,      │
                        │ Vector Memory)   │  │   Gemini 1.5 Synthesis)  │
                        └──────────────────┘  └──────────────────────────┘
 ```

@@ -5,6 +5,7 @@ import { env } from './config/env';
 import { logger } from './config/logger';
 import { connectDatabase } from './config/database';
 import { initAgentWorker } from './queue/agent.queue';
+import { schedulerService } from './services/scheduler.service';
 
 const startServer = async () => {
   try {
@@ -32,8 +33,9 @@ const startServer = async () => {
       });
     });
 
-    // 4. Initialize BullMQ Queue Worker
+    // 4. Initialize BullMQ Queue Worker & Autonomous Background Schedulers
     initAgentWorker(io);
+    await schedulerService.initOnStartup(io);
 
     // 5. Start Server Listen with EADDRINUSE fallback handling
     const PORT = Number(env.PORT) || 5000;

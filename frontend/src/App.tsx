@@ -17,16 +17,18 @@ import { MemoryViewer } from './pages/MemoryViewer';
 import { SchedulerLogs } from './pages/SchedulerLogs';
 import { Analytics } from './pages/Analytics';
 import { Settings } from './pages/Settings';
+import { EvaluatorSimulation } from './pages/EvaluatorSimulation';
 
-const queryClient = new QueryClient();
-
-const ProtectedLayout: React.FC = () => {
-  const { isAuthenticated } = useAuthStore();
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1
+    }
   }
+});
 
+const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#090D16] text-gray-100 flex flex-col font-sans">
       <Navbar />
@@ -35,8 +37,9 @@ const ProtectedLayout: React.FC = () => {
         <main className="flex-1 p-8 overflow-y-auto max-w-7xl mx-auto">
           <Routes>
             <Route path="/" element={<Dashboard />} />
-            <Route path="/persona" element={<PersonaProfile />} />
+            <Route path="/evaluator" element={<EvaluatorSimulation />} />
             <Route path="/feed" element={<LiveFeed />} />
+            <Route path="/persona" element={<PersonaProfile />} />
             <Route path="/discovery" element={<TopicDiscovery />} />
             <Route path="/editorial" element={<EditorialDecisions />} />
             <Route path="/memory" element={<MemoryViewer />} />
@@ -65,7 +68,7 @@ export const App: React.FC = () => {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/*" element={<ProtectedLayout />} />
+            <Route path="/*" element={<AppLayout />} />
           </Routes>
         </Router>
       </SocketProvider>

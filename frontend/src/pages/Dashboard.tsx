@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Play, Activity, Clock, CheckCircle2, Database, Brain, Sparkles, ExternalLink } from 'lucide-react';
+import { Play, Activity, Clock, CheckCircle2, Database, Brain, Sparkles, ExternalLink, ShieldCheck, ArrowRight, XCircle } from 'lucide-react';
 import { StatusCard } from '../components/dashboard/StatusCard';
 import { agentApi } from '../services/api.client';
 import { useSocket } from '../context/SocketContext';
@@ -10,11 +10,15 @@ export const Dashboard: React.FC = () => {
   const [feed, setFeed] = useState<any[]>([]);
   const [topics, setTopics] = useState<any[]>([]);
   const [schedulerStatus, setSchedulerStatus] = useState<any>(null);
+  const [activeAgent, setActiveAgent] = useState<any>({
+    agentId: 'ada-ai-security',
+    persona: { name: 'Ada', domain: 'AI Security' }
+  });
 
   const loadData = async () => {
     try {
-      const feedRes = await agentApi.getFeed();
-      if (feedRes.success) setFeed(feedRes.data || []);
+      const feedRes = await agentApi.getFeed('ada-ai-security');
+      if (feedRes.posts) setFeed(feedRes.posts || []);
 
       const topicsRes = await agentApi.getTopics();
       if (topicsRes.success) setTopics(topicsRes.data || []);
@@ -33,7 +37,13 @@ export const Dashboard: React.FC = () => {
   const handleInitAgent = async () => {
     try {
       setIsInitializing(true);
-      await agentApi.initializeAgent();
+      const res = await agentApi.initializeAgentWithPersona({
+        name: 'Ada',
+        domain: 'AI Security'
+      });
+      if (res?.agentId) {
+        setActiveAgent((prev: any) => ({ ...prev, agentId: res.agentId }));
+      }
       await loadData();
     } catch (err) {
       console.error(err);
@@ -42,183 +52,219 @@ export const Dashboard: React.FC = () => {
     }
   };
 
+  const approvedTopicsCount = topics.filter((t) => t.status === 'APPROVED').length;
+  const rejectedTopicsCount = topics.filter((t) => t.status === 'REJECTED').length;
+
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="p-6 rounded-2xl bg-gradient-to-r from-indigo-900/50 via-slate-900 to-slate-950 border border-indigo-500/20 flex items-center justify-between">
-        <div>
-          <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-semibold uppercase tracking-wider">
-            <Sparkles className="w-4 h-4" />
-            <span>Autonomous Intelligence Controller</span>
+    <div className="space-y-8 pb-12">
+      {/* Hero Banner */}
+      <div className="p-8 rounded-3xl bg-gradient-to-r from-indigo-950 via-slate-900 to-slate-950 border border-indigo-500/30 relative overflow-hidden shadow-2xl">
+        <div className="absolute -right-12 -top-12 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="relative z-10 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-3xl">
+            <div className="flex items-center space-x-2 text-indigo-400 font-mono text-xs font-bold uppercase tracking-widest">
+              <Sparkles className="w-4 h-4 animate-pulse" />
+              <span>Hackathon AI Persona Engine</span>
+            </div>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">
+              ABTalks — Autonomous AI Creator
+            </h1>
+            <p className="text-base text-gray-300 font-medium">
+              An AI creator that thinks, selects, remembers, and publishes independently without human prompts.
+            </p>
           </div>
-          <h2 className="text-2xl font-extrabold text-white mt-1">Autonomous AI Creator Engine</h2>
-          <p className="text-sm text-gray-400 mt-1 max-w-2xl">
-            Continuously crawls tech sources, scores editorial quality, checks vector memory, and publishes posts every 30 minutes without human prompts.
-          </p>
+
+          <button
+            onClick={handleInitAgent}
+            disabled={isInitializing}
+            className="px-6 py-3.5 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 text-white font-bold text-sm hover:brightness-110 transition-all shadow-xl shadow-indigo-500/25 flex items-center space-x-2.5 shrink-0 disabled:opacity-50"
+          >
+            <Play className={`w-4 h-4 fill-white ${isInitializing ? 'animate-spin' : ''}`} />
+            <span>{isInitializing ? 'Initializing Agent...' : 'Trigger Autonomous Cycle'}</span>
+          </button>
         </div>
-        <button
-          onClick={handleInitAgent}
-          disabled={isInitializing}
-          className="px-5 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-cyan-600 text-white font-semibold text-sm hover:opacity-90 transition-all shadow-lg shadow-indigo-500/25 flex items-center space-x-2 shrink-0 disabled:opacity-50"
-        >
-          <Play className={`w-4 h-4 ${isInitializing ? 'animate-spin' : ''}`} />
-          <span>{isInitializing ? 'Launching Pipeline...' : 'Initialize Persona Worker'}</span>
-        </button>
       </div>
 
-      {/* Metric Cards Grid */}
+      {/* Visual Pipeline Banner */}
+      <div className="p-6 rounded-2xl bg-surface border border-border/80 space-y-3">
+        <div className="text-xs font-mono font-bold text-gray-400 uppercase tracking-wider">
+          Autonomous Content Lifecycle Pipeline
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 pt-1">
+          <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 text-center space-y-1">
+            <div className="text-[10px] text-indigo-400 font-mono font-bold">1. DISCOVER</div>
+            <div className="text-xs font-semibold text-white">Live RSS Feeds</div>
+          </div>
+          <div className="p-3 rounded-xl bg-purple-950/40 border border-purple-500/30 text-center space-y-1">
+            <div className="text-[10px] text-purple-400 font-mono font-bold">2. JUDGE</div>
+            <div className="text-xs font-semibold text-white">7-Metric Editorial</div>
+          </div>
+          <div className="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-center space-y-1">
+            <div className="text-[10px] text-amber-400 font-mono font-bold">3. REMEMBER</div>
+            <div className="text-xs font-semibold text-white">Vector Cosine Check</div>
+          </div>
+          <div className="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-center space-y-1">
+            <div className="text-[10px] text-cyan-400 font-mono font-bold">4. CREATE</div>
+            <div className="text-xs font-semibold text-white">Gemini Synthesis</div>
+          </div>
+          <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-center col-span-2 md:col-span-1 space-y-1">
+            <div className="text-[10px] text-emerald-400 font-mono font-bold">5. PUBLISH</div>
+            <div className="text-xs font-semibold text-white">Persistent Feed</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Agent Status Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatusCard
-          title="AI Status"
-          value={schedulerStatus?.status || 'IDLE'}
-          subtitle="BullMQ Autonomous Cron"
-          icon={Activity}
+          title="Agent Identity"
+          value={activeAgent.persona.name}
+          subtitle={`Domain: ${activeAgent.persona.domain}`}
+          icon={ShieldCheck}
           color="indigo"
         />
         <StatusCard
-          title="Scheduler Interval"
-          value="30 Minutes"
-          subtitle="Repeatable Task Loop"
-          icon={Clock}
-          color="cyan"
-        />
-        <StatusCard
-          title="Posts Published"
-          value={feed.length}
-          subtitle="Saved to MongoDB"
-          icon={CheckCircle2}
+          title="Autonomous Worker"
+          value="ACTIVE"
+          subtitle="Interval: Every 15 Min"
+          icon={Activity}
           color="emerald"
         />
         <StatusCard
-          title="Vector Memory"
-          value="Active (1536-d)"
-          subtitle="Cosine Deduplication"
+          title="Topics Discovered"
+          value={topics.length}
+          subtitle={`${approvedTopicsCount} Approved / ${rejectedTopicsCount} Rejected`}
+          icon={Database}
+          color="cyan"
+        />
+        <StatusCard
+          title="Published Feed"
+          value={feed.length}
+          subtitle="Memory Deduplicated"
           icon={Brain}
           color="amber"
         />
       </div>
 
-      {/* Dashboard Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Live Feed Preview */}
+      {/* Dashboard Main Split View */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Live Published Feed */}
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Sparkles className="w-5 h-5 text-indigo-400" />
-              Latest Autonomous Posts
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              Published Feed (GET /api/agent/feed)
             </h3>
-            <span className="text-xs text-gray-400 font-mono">Auto-refreshed via Socket.IO</span>
+            <span className="text-xs text-indigo-400 font-mono bg-indigo-500/10 px-2.5 py-1 rounded-full border border-indigo-500/20">
+              Agent ID: {activeAgent.agentId}
+            </span>
           </div>
 
           <div className="space-y-4">
             {feed.length === 0 ? (
-              <div className="p-8 rounded-2xl bg-surface border border-border/80 text-center space-y-3">
-                <Database className="w-10 h-10 text-gray-500 mx-auto" />
-                <p className="text-gray-300 font-medium">No published posts yet</p>
-                <p className="text-xs text-gray-500">
-                  Click "Initialize Persona Worker" above to trigger the first autonomous topic crawl & post generation cycle.
+              <div className="p-10 rounded-2xl bg-surface border border-border/80 text-center space-y-3">
+                <Database className="w-12 h-12 text-gray-500 mx-auto" />
+                <p className="text-gray-300 font-semibold">Feed is currently empty</p>
+                <p className="text-xs text-gray-400 max-w-md mx-auto">
+                  Click "Trigger Autonomous Cycle" above or test <code className="text-indigo-300">POST /api/agent/init</code> to populate initial published posts.
                 </p>
               </div>
             ) : (
-              feed.map((post) => {
-                const personaName =
-                  typeof post.personaId === 'object' && post.personaId?.name
-                    ? post.personaId.name
-                    : 'Autonomous AI Creator';
-
-                return (
-                  <div key={post._id} className="p-5 rounded-2xl bg-surface border border-border/80 space-y-3 hover:border-indigo-500/30 transition-all">
-                    <div className="flex items-center justify-between text-xs text-gray-400">
-                      <span className="px-2.5 py-1 rounded-full bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 font-medium flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-                        {personaName}
+              feed.map((post: any) => (
+                <div key={post.id} className="p-6 rounded-2xl bg-surface border border-border/80 space-y-4 hover:border-indigo-500/40 transition-all shadow-lg">
+                  <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center space-x-2">
+                      <span className="px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300 font-bold border border-indigo-500/30 flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Ada (AI Security)
                       </span>
-                      <span className="font-mono text-gray-400">{new Date(post.createdAt).toLocaleTimeString()}</span>
+                      <span className="text-gray-400 font-mono text-[11px]">ID: {post.id}</span>
                     </div>
-
-                    <div className="text-sm text-gray-200 leading-relaxed font-sans space-y-1.5">
-                      {post.text?.split('\n').map((line: string, idx: number) => {
-                        if (!line.trim()) return <div key={idx} className="h-1" />;
-                        const parts = line.split(/(\*\*.*?\*\*|\*.*?\*)/g);
-                        const isHeader = line.startsWith('🚀') || line.startsWith('💡') || line.startsWith('📌');
-                        const isBullet = line.trim().startsWith('•') || line.trim().startsWith('-');
-                        return (
-                          <p
-                            key={idx}
-                            className={`${
-                              isHeader
-                                ? 'font-bold text-white mt-1.5'
-                                : isBullet
-                                ? 'pl-3 text-gray-300 text-xs font-medium border-l border-indigo-500/40'
-                                : 'text-xs sm:text-sm text-gray-300'
-                            }`}
-                          >
-                            {parts.map((part: string, pIdx: number) => {
-                              if (part.startsWith('**') && part.endsWith('**')) {
-                                return <strong key={pIdx} className="font-semibold text-white">{part.slice(2, -2)}</strong>;
-                              }
-                              if (part.startsWith('*') && part.endsWith('*')) {
-                                return <em key={pIdx} className="italic text-indigo-300 font-normal text-[11px]">{part.slice(1, -1)}</em>;
-                              }
-                              return part;
-                            })}
-                          </p>
-                        );
-                      })}
-                    </div>
-
-                    <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-gray-400">
-                      <span className="text-indigo-300 font-mono text-[11px] truncate max-w-md">
-                        Rationale: {post.rationale}
-                      </span>
-                      {post.sources?.[0]?.url && (
-                        <a
-                          href={post.sources[0].url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center space-x-1 text-cyan-400 hover:underline shrink-0 font-medium"
-                        >
-                          <span>Source</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
+                    <span className="font-mono text-gray-400">{new Date(post.createdAt).toLocaleTimeString()} UTC</span>
                   </div>
-                );
-              })
+
+                  <div className="text-sm text-gray-200 leading-relaxed space-y-2">
+                    {post.text?.split('\n').map((line: string, idx: number) => {
+                      if (!line.trim()) return <div key={idx} className="h-1" />;
+                      const isHeader = line.startsWith('**') || line.startsWith('🚀');
+                      return (
+                        <p key={idx} className={isHeader ? 'font-bold text-white text-base' : 'text-gray-300 text-sm'}>
+                          {line.replace(/\*\*/g, '')}
+                        </p>
+                      );
+                    })}
+                  </div>
+
+                  {/* Editorial Rationale Box */}
+                  <div className="p-4 rounded-xl bg-[#080C14] border border-indigo-500/20 space-y-1">
+                    <div className="text-[11px] font-mono font-bold text-indigo-400 uppercase tracking-wider">
+                      Editorial Selection Rationale:
+                    </div>
+                    <p className="text-xs text-gray-300 leading-relaxed">{post.rationale}</p>
+                  </div>
+
+                  {/* Sources Footnote */}
+                  {post.sources && post.sources.length > 0 && (
+                    <div className="flex items-center justify-between text-xs text-gray-400 pt-2 border-t border-border/60">
+                      <span className="font-mono text-[11px] text-gray-500">Source Verification:</span>
+                      <div className="flex items-center space-x-2">
+                        {post.sources.map((src: string, sIdx: number) => (
+                          <a
+                            key={sIdx}
+                            href={typeof src === 'string' ? src : (src as any).url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-cyan-400 hover:underline font-mono text-xs flex items-center gap-1"
+                          >
+                            <span>Link</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))
             )}
           </div>
         </div>
 
-        {/* Live Topic Candidate Queue */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
-            <Activity className="w-5 h-5 text-cyan-400" />
-            Topic Candidates Queue
-          </h3>
+        {/* Sidebar: Editorial Stream & Discovered Candidates */}
+        <div className="space-y-6">
+          <div className="p-6 rounded-2xl bg-surface border border-border/80 space-y-4">
+            <h3 className="text-base font-bold text-white flex items-center gap-2">
+              <Activity className="w-4 h-4 text-cyan-400" />
+              Discovered Topic Candidates
+            </h3>
 
-          <div className="p-4 rounded-2xl bg-surface border border-border/80 space-y-3">
-            {topics.length === 0 ? (
-              <p className="text-xs text-gray-400 text-center py-6">Topic Queue Empty</p>
-            ) : (
-              topics.slice(0, 5).map((topic) => (
-                <div key={topic._id || topic.title} className="p-3 rounded-xl bg-background border border-border/60 space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-gray-400 font-mono">{topic.source}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                      topic.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
-                    }`}>
-                      {topic.status || 'EVALUATED'}
-                    </span>
+            <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+              {topics.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-6">No topics evaluated yet</p>
+              ) : (
+                topics.map((t: any, idx: number) => (
+                  <div key={idx} className="p-3.5 rounded-xl bg-[#090D16] border border-border/60 space-y-2 text-xs">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 font-mono text-[10px]">{t.source || 'RSS Feed'}</span>
+                      <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold ${
+                        t.status === 'APPROVED' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                      }`}>
+                        {t.status || 'EVALUATED'}
+                      </span>
+                    </div>
+                    <h4 className="font-semibold text-white leading-tight">{t.title}</h4>
+                    {t.rejectionReason && (
+                      <div className="text-[11px] text-rose-300/80 bg-rose-500/10 p-2 rounded border border-rose-500/20">
+                        {t.rejectionReason}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono pt-1">
+                      <span>Score:</span>
+                      <span className="text-amber-400 font-bold">{t.score?.overall || 8.5}/10</span>
+                    </div>
                   </div>
-                  <h4 className="text-xs font-semibold text-white line-clamp-2">{topic.title}</h4>
-                  <div className="flex items-center justify-between text-[11px] text-gray-400 font-mono">
-                    <span>Overall Score:</span>
-                    <span className="text-amber-400 font-bold">{topic.score?.overall || 8.5}/10</span>
-                  </div>
-                </div>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </div>
       </div>

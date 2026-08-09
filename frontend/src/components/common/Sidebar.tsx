@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
+  Terminal,
   UserCheck,
   Rss,
   Compass,
@@ -14,8 +15,9 @@ import {
 
 const navItems = [
   { name: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { name: 'Persona Profile', path: '/persona', icon: UserCheck },
+  { name: 'Evaluator API Panel', path: '/evaluator', icon: Terminal },
   { name: 'Live Feed', path: '/feed', icon: Rss },
+  { name: 'Persona Profile', path: '/persona', icon: UserCheck },
   { name: 'Topic Discovery', path: '/discovery', icon: Compass },
   { name: 'Editorial Decisions', path: '/editorial', icon: CheckCheck },
   { name: 'Memory Viewer', path: '/memory', icon: BrainCircuit },
@@ -54,11 +56,11 @@ export const Sidebar: React.FC = () => {
 
       <div className="p-4 rounded-xl bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-500/20 text-xs space-y-2">
         <div className="flex items-center justify-between text-indigo-300 font-semibold">
-          <span>Scheduler Loop</span>
-          <span className="px-1.5 py-0.5 rounded bg-indigo-500/20 text-[10px]">30 MIN</span>
+          <span>Autonomous Loop</span>
+          <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 font-mono text-[10px] uppercase">ACTIVE</span>
         </div>
         <p className="text-gray-400 text-[11px] leading-relaxed">
-          Autonomous BullMQ worker discovers, filters, & publishes AI news without human prompts.
+          Background worker continuously discovers, evaluates, & publishes AI news without human prompts.
         </p>
       </div>
     </aside>

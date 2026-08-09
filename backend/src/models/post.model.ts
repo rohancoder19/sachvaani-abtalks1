@@ -1,8 +1,9 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
 export interface IPost extends Document {
-  personaId: mongoose.Types.ObjectId;
-  topicId: mongoose.Types.ObjectId;
+  agentId?: string;
+  personaId?: mongoose.Types.ObjectId;
+  topicId?: mongoose.Types.ObjectId;
   text: string;
   rationale: string;
   sources: Array<{ title: string; url: string }>;
@@ -18,13 +19,14 @@ export interface IPost extends Document {
 
 const PostSchema: Schema = new Schema(
   {
-    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', required: true, index: true },
-    topicId: { type: Schema.Types.ObjectId, ref: 'Topic', required: true },
+    agentId: { type: String, index: true },
+    personaId: { type: Schema.Types.ObjectId, ref: 'Persona', index: true },
+    topicId: { type: Schema.Types.ObjectId, ref: 'Topic' },
     text: { type: String, required: true },
     rationale: { type: String, required: true },
     sources: [
       {
-        title: { type: String, required: true },
+        title: { type: String },
         url: { type: String, required: true }
       }
     ],

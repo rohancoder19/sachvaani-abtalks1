@@ -8,7 +8,10 @@ LIVE_SOURCES = [
     {"name": "TechCrunch AI", "url": "https://techcrunch.com/category/artificial-intelligence/feed/"},
     {"name": "VentureBeat AI", "url": "https://venturebeat.com/category/ai/feed/"},
     {"name": "MIT Tech Review", "url": "https://www.technologyreview.com/feed/"},
-    {"name": "HackerNews Frontpage", "url": "https://hnrss.org/frontpage"}
+    {"name": "HackerNews AI", "url": "https://hnrss.org/newest?q=AI"},
+    {"name": "Ars Technica", "url": "https://feeds.arstechnica.com/arstechnica/index"},
+    {"name": "The Verge AI", "url": "https://www.theverge.com/rss/ai-artificial-intelligence/index.xml"},
+    {"name": "Google News AI", "url": "https://news.google.com/rss/search?q=Artificial+Intelligence&hl=en-US&gl=US&ceid=US:en"}
 ]
 
 def fetch_single_source(source: Dict[str, str]) -> List[Dict[str, Any]]:
