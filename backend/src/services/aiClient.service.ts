@@ -3,8 +3,13 @@ import { env } from '../config/env';
 import { logger } from '../config/logger';
 
 export class AIClientService {
+  private getBaseUrl(): string {
+    const rawUrl = env.FASTAPI_AI_SERVICE_URL || 'http://localhost:8000';
+    return rawUrl.replace(/\/+$/, '');
+  }
+
   private client = axios.create({
-    baseURL: env.FASTAPI_AI_SERVICE_URL,
+    baseURL: (env.FASTAPI_AI_SERVICE_URL || 'http://localhost:8000').replace(/\/+$/, ''),
     timeout: 15000,
     headers: {
       'Content-Type': 'application/json'
