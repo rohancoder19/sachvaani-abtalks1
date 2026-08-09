@@ -28,6 +28,22 @@ const queryClient = new QueryClient({
   }
 });
 
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, token } = useAuthStore();
+  if (!isAuthenticated && !token) {
+    return <Navigate to="/login" replace />;
+  }
+  return <>{children}</>;
+};
+
+const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, token } = useAuthStore();
+  if (isAuthenticated || token) {
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+};
+
 const AppLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#090D16] text-gray-100 flex flex-col font-sans">
@@ -66,9 +82,30 @@ export const App: React.FC = () => {
       <SocketProvider>
         <Router>
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/*" element={<AppLayout />} />
+            <Route
+              path="/login"
+              element={
+                <PublicOnlyRoute>
+                  <Login />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <PublicOnlyRoute>
+                  <Register />
+                </PublicOnlyRoute>
+              }
+            />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppLayout />
+                </ProtectedRoute>
+              }
+            />
           </Routes>
         </Router>
       </SocketProvider>
